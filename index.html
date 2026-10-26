@@ -109,7 +109,7 @@ p{margin:0;line-height:1.5}
 .hud>*{pointer-events:auto}
 .board{background:rgba(9,14,26,.86);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-family:var(--display);font-weight:700;font-size:18px;display:flex;gap:14px;align-items:center}
 .board .lit{color:var(--amber);font-variant-numeric:tabular-nums}
-#prompt{position:absolute;left:50%;transform:translateX(-50%);top:max(64px,calc(env(safe-area-inset-top,0px) + 56px));background:rgba(9,14,26,.86);border-radius:12px;padding:10px 18px;font-weight:700;font-size:18px;text-align:center;max-width:min(90vw,640px);pointer-events:none}
+#prompt{position:absolute;left:50%;transform:translateX(-50%);bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 16px));background:rgba(9,14,26,.86);border-radius:12px;padding:10px 18px;font-weight:700;font-size:18px;text-align:center;max-width:min(90vw,640px);pointer-events:none}
 #timer{position:absolute;left:0;right:0;bottom:0;height:8px;background:rgba(0,0,0,.35)}
 #timer i{display:block;height:100%;width:100%;background:var(--amber);transform-origin:left}
 #tapLayer{position:absolute;inset:0;pointer-events:none}
@@ -118,6 +118,8 @@ p{margin:0;line-height:1.5}
 .tgt span{position:absolute;top:70px;white-space:nowrap;background:rgba(9,14,26,.85);padding:3px 8px;border-radius:7px;font-size:13px;font-weight:700}
 .tgt:active{background:rgba(255,191,71,.6)}
 #playBar{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;flex-wrap:wrap;gap:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+#playBar.side{left:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));flex-direction:column;flex-wrap:nowrap;align-items:stretch;width:min(300px,42vw);padding:0}
+#playBar.side.lefty{right:auto;left:max(16px,env(safe-area-inset-left,0px))}
 #playBar .btn{background:rgba(19,29,51,.94);min-height:58px;font-size:17px;border-width:2px}
 #playBar .btn.shot{border-color:#fff}
 #banner{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:800;font-size:clamp(48px,10vw,110px);letter-spacing:.02em;text-shadow:0 4px 24px rgba(0,0,0,.6);pointer-events:none;text-align:center}
@@ -142,15 +144,32 @@ p{margin:0;line-height:1.5}
 .form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
 .form input[type=text],.form select{font:inherit;min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:0 12px}
 .confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--less-bg);border-radius:12px;padding:12px}
+.verdict{font-size:clamp(34px,5vw,46px);line-height:1.05}
+.verdict.best{color:var(--best-fg)}.verdict.good{color:var(--good-fg)}.verdict.less{color:var(--amber)}
+.kidcue{font-size:22px;font-weight:700;line-height:1.3}
+.besttip{background:var(--best-bg);border:2px solid #2f9e63;border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.besttip span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--best-fg)}
+.besttip b{font-family:var(--display);font-size:30px;color:#fff;line-height:1.1}
+.legend{display:flex;gap:14px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
+.dot.best{background:var(--open)}.dot.good{background:var(--blue)}.dot.less{background:#6d7a96}
+.ptiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ptile{min-height:56px;border-radius:12px;border:2px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:8px;padding:8px 10px;text-align:left;font-weight:600;font-size:15px;line-height:1.2}
+.ptile.best{border-color:#2f9e63}.ptile.good{border-color:#2c5aa8}
+.ptile .you{margin-left:auto;font-size:11px;font-weight:800;background:var(--fg);color:var(--bg);padding:2px 7px;border-radius:999px}
+@keyframes litpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,207,58,.0)}50%{box-shadow:0 0 0 6px rgba(255,207,58,.45)}}
+.ptile.lit{outline:3px solid #ffcf3a;outline-offset:1px;animation:litpulse 1s ease-in-out infinite}
+.ptile[aria-pressed="true"]{outline:3px solid var(--amber);outline-offset:1px}
+.why{font-size:18px;line-height:1.4;min-height:52px;background:var(--panel2);border-radius:12px;padding:12px 14px}
+.parents summary{cursor:pointer;color:var(--muted);font-weight:600;padding:8px 0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div id="home" class="screen">
   <div class="wrap">
-    <div>
-      <div class="eyebrow">Read the goalie. Make the play.</div>
-      <h1>Goalie Reads</h1>
-    </div>
+    <div class="topbar"><div class="eyebrow">Read the goalie. Make the play.</div><button class="btn small" id="appSetBtn">Settings</button></div>
+    <h1>Goalie Reads</h1>
     <h2>Who's up?</h2>
     <div class="players" id="playerList"></div>
     <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between"><div><h3>Try the demo</h3><p class="muted">Six reps from the slot, a sharp angle, and the goal line, with every read unlocked. Nothing is saved to George or Charlie.</p></div><button class="btn primary" id="demoBtn">Start the demo</button></div>
@@ -195,7 +214,7 @@ p{margin:0;line-height:1.5}
     <div class="split">
       <div>
         <div class="seg" id="lesSeg" role="group" aria-label="View">
-          <button data-v="eyes" aria-pressed="true">Your eyes</button><button data-v="blade" aria-pressed="false">Your stick blade</button><button data-v="both" aria-pressed="false">Both</button>
+          <button data-v="eyes" aria-pressed="true">My eyes</button><button data-v="blade" aria-pressed="false">My stick blade</button><button data-v="both" aria-pressed="false">Both</button>
         </div>
         <div class="viewbox" style="margin-top:10px"><div class="views" id="lesViews"></div></div>
         <p class="caption" id="lesCap"></p>
@@ -230,19 +249,25 @@ p{margin:0;line-height:1.5}
       <div class="tabs" id="dbTabs"></div>
       <div class="split">
         <div>
-          <div class="seg" id="dbSeg" role="group" aria-label="View">
-            <button data-v="eyes" aria-pressed="true">Your eyes</button><button data-v="blade" aria-pressed="false">Your stick blade</button><button data-v="both" aria-pressed="false">Both</button>
-          </div>
-          <div class="viewbox" style="margin-top:10px"><div class="views" id="dbViews"></div></div>
+          <div class="viewbox"><div class="views" id="dbViews"></div></div>
+          <div class="seg" id="dbSeg" role="group" aria-label="View" style="margin-top:10px"><button data-v="eyes" aria-pressed="true">My eyes</button><button data-v="blade" aria-pressed="false">My stick blade</button><button data-v="both" aria-pressed="false">Both</button></div>
           <p class="caption" id="dbCap"></p>
         </div>
         <div class="facts">
-          <div class="verdict" id="dbVerdict"></div>
-          <div class="fact"><div class="k">What the goalie did</div><p id="dbKey"></p></div>
-          <div class="fact" id="dbHandBox"><div class="k">Your stick</div><p id="dbHand"></p></div>
-          <div class="k muted" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700">Your options on this play</div>
-          <div class="opts" id="dbOpts"></div>
+          <div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="verdict" id="dbVerdict"></div><p class="muted" id="dbNote"></p></div><button class="btn small" id="dbCoach">Hear the coach</button></div>
+          <div class="kidcue" id="dbKid"></div>
+          <div class="besttip"><span>Best play</span><b id="dbBest"></b></div>
+          <div class="legend"><span><i class="dot best"></i>Best</span><span><i class="dot good"></i>Good</span><span><i class="dot less"></i>Not this time</span></div>
+          <div class="ptiles" id="dbTiles"></div>
+          <p class="why" id="dbWhy"></p>
           <div class="row"><button class="btn" id="dbReplay">Watch again</button><button class="btn primary" id="dbNext">Next rep</button></div>
+          <details class="parents"><summary>For parents: why each play works</summary>
+            <div class="facts" style="margin-top:10px">
+              <div class="fact"><div class="k">What the goalie did</div><p id="dbKey"></p></div>
+              <div class="fact" id="dbHandBox"><div class="k">His stick</div><p id="dbHand"></p></div>
+              <div class="opts" id="dbOpts"></div>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -269,6 +294,19 @@ p{margin:0;line-height:1.5}
   </div>
 </div>
 
+<div id="appset" class="screen" hidden>
+  <div class="wrap">
+    <div class="topbar"><button class="btn small" data-go="home">Back</button><div class="eyebrow">Settings</div></div>
+    <h1>These settings apply to every player</h1>
+    <label class="switch"><input type="checkbox" id="voiceToggle"><span><b>Coach voice.</b> <span class="muted">The coach reads each debrief out loud. It uses the iPad's built-in voice and works offline.</span></span></label>
+    <label class="switch"><input type="checkbox" id="autoToggle"><span><b>Start the coach automatically.</b> <span class="muted">When off, tap "Hear the coach" on the debrief.</span></span></label>
+    <div class="card"><h3>Reset all lesson history</h3><p class="muted" style="margin:6px 0 12px">Clears learned lessons and play history for every player. Names, shooting hand, and goalie age stay the same.</p>
+      <button class="btn" id="resetAll">Reset all lesson history</button>
+      <div class="confirm" id="resetAllConfirm" hidden style="margin-top:12px"><span>This can't be undone. Clear lesson history for every player?</span><button class="btn small" id="resetAllYes" style="background:var(--red);border-color:var(--red)">Yes, clear it</button><button class="btn small" id="resetAllNo">Keep it</button></div>
+      <p class="muted" id="resetAllMsg" style="margin-top:8px"></p></div>
+  </div>
+</div>
+
 <div id="settings" class="screen" hidden>
   <div class="wrap">
     <div class="topbar"><button class="btn small" data-go="menu">Back</button><div class="eyebrow">Settings</div></div>
@@ -278,7 +316,7 @@ p{margin:0;line-height:1.5}
       <div><div style="font-weight:600;margin-bottom:6px">Shoots</div><div class="seg" id="setShoots"><button data-v="L">Left</button><button data-v="R">Right</button></div></div>
       <label>Age of the goalies he plays against<select id="setGoalie"><option value="6">6 years old</option><option value="7">7 years old</option><option value="8">8 years old</option><option value="9">9 years old</option><option value="10">10 years old</option><option value="11">11 years old</option><option value="12">12 years old</option></select></label>
       <p class="muted">Older goalies are bigger, so they cover more of the net. Move this up as the goalies in his games get better.</p>
-      <div class="row"><button class="btn primary" id="setSave">Save</button><button class="btn" id="setReset">Reset progress</button></div>
+      <div class="row"><button class="btn primary" id="setSave">Save</button><button class="btn" id="setReset">Reset this player's lessons</button></div>
       <div class="confirm" id="setConfirm" hidden><span>Clear all lessons and stats for this player?</span><button class="btn small" id="setResetYes" style="background:var(--red);border-color:var(--red)">Clear progress</button><button class="btn small" id="setResetNo">Keep it</button></div>
       <p id="setMsg" class="muted"></p>
     </div>
@@ -327,8 +365,8 @@ function lerpPose(A,B,t){const o={};for(const k in A){o[k]=A[k].map((v,i)=>v+(B[
 
 /* ---------- geometry of the rink and the shooter ---------- */
 // World: x = shooter's right when facing the net from the front, y = 0 at the goal line (front of the net is y<0), z = up. Net mouth 6 ft wide by 4 ft tall.
-function stdPos(P,depth){const d=n2([P[0],P[1]]);let g=[d[0]*depth,d[1]*depth];if(g[1]>-.7)g[1]=-.7;g[0]=clamp(g[0],-2.5,2.5);return g}
-function bladeOf(P,shoots){const f=n2([-P[0],-P[1]]);const r=[f[1],-f[0]];const h=shoots==="L"?-1:1;return[P[0]+r[0]*h*1.5+f[0]*1.3,P[1]+r[1]*h*1.5+f[1]*1.3,.22]}
+function stdPos(P,depth){const d=n2([P[0],P[1]]);let g=[d[0]*depth,d[1]*depth];if(g[1]>-.7)g[1]=-.7;g[0]=clamp(g[0],-2.6,2.6);return g}
+function bladeOf(P,shoots){const f=n2([-P[0],-P[1]]),r=[f[1],-f[0]],h=shoots==="L"?-1:1;return[P[0]+r[0]*h*1.1+f[0]*3,P[1]+r[1]*h*1.1+f[1]*3,.2]}
 const GX=30,GZ=20;
 function openStats(g){let lo=0,hi=0,n=GX*GZ/2;for(let j=0;j<GZ;j++)for(let i=0;i<GX;i++){if(g[j*GX+i]){if(j<GZ/2)lo++;else hi++}}return{lo:lo/n,hi:hi/n,all:(lo+hi)/(2*n)}}
 
@@ -421,10 +459,8 @@ function build3D(){
   let envTex=null;try{const pm=new THREE.PMREMGenerator(renderer);envTex=pm.fromScene(scene,.04).texture}catch(e){}
   const goalie=buildGoalie(envTex);scene.add(goalie.group);
   // the player's own stick, drawn in first person
-  const vmScene=new THREE.Scene(),vmCam=new THREE.PerspectiveCamera(50,1.4,.01,50);
-  const vh=new THREE.HemisphereLight("#ffffff","#8a94a3",1.0);vmScene.add(vh);const vd=new THREE.DirectionalLight("#ffffff",.9);vd.position.set(.4,1,.6);vmScene.add(vd);
-  const vm=buildPlayerStick();vmScene.add(vm.group);
-  return{renderer,scene,camera,shade,dtex,data,puck,goalie,vmScene,vmCam,vm}
+  const vm=buildPlayerStick();vm.group.traverse(o=>{if(o.isMesh&&o!==vm.shadow)o.castShadow=true});scene.add(vm.group);
+  return{renderer,scene,camera,shade,dtex,data,puck,goalie,vm}
 }
 const REF={pants:[.7,.3],body:[.78,.5],head:[.32,.32],glove:[.38,.38],blocker:[.24,.42]};
 function jerseyTex2(){return cTex(1024,320,(g,w,h)=>{g.fillStyle="#f3f4f6";g.fillRect(0,0,w,h);
@@ -485,7 +521,7 @@ function buildGoalie(envTex){
   const arms=[0,1,2,3].map(i=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.17,i%2?.15:.19,1,18),sleeve);m.castShadow=true;group.add(m);return m});
   const elbow=[0,1].map(()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.2,18,12),std({color:"#2347a8",roughness:.8}));m.castShadow=true;group.add(m);return m});
   const stickW=std({color:"#f2f1ec",roughness:.4}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#f2f1ec";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.15,w,h*.55)}),roughness:.4});
-  const blade=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickW),paddle=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickR),shaft=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickW);
+  const blade=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({map:tapeTex(),roughness:.7})),paddle=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickR),shaft=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickW);
   const knob=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1,12),std({color:"#e9e6df",roughness:.9}));
   [blade,paddle,shaft,knob].forEach(m=>{m.castShadow=true;group.add(m)});
   return{group,P,arms,elbow,blade,paddle,shaft,knob}
@@ -503,47 +539,51 @@ function poseGoalie(go,G,fg,parts){
     const mid=sh.clone().lerp(hand,.5).addScaledVector(L,s*.2*k).addScaledVector(U,-.22*k);
     placeSeg(go.arms[i*2],sh,mid,k,k);placeSeg(go.arms[i*2+1],mid,hand,k,k);go.elbow[i].position.copy(mid);go.elbow[i].scale.setScalar(k)});
   const S=parts.stick,hgt=Math.max(.08,S[4]*.8),heel=W(S[0]-S[3],S[1],hgt),toe=W(S[0]+S[3],S[1],hgt),bl=go.P.blocker.holder.position.clone().addScaledVector(n,-.2*k);
-  go.blade.position.copy(heel).lerp(toe,.5);go.blade.quaternion.copy(q);go.blade.scale.set(heel.distanceTo(toe),Math.max(.2,S[4]*1.5),.07);
+  go.blade.position.copy(heel).lerp(toe,.5);go.blade.quaternion.copy(q);go.blade.scale.set(heel.distanceTo(toe),Math.max(.2,S[4]*1.3),.045);
   let P1;if(S[1]>1.2){P1=heel.clone().lerp(bl,.45);P1.z=.25}else{P1=heel.clone().addScaledVector(U,1.3*k).addScaledVector(L,-.1)}
   placeSeg(go.paddle,heel,P1,.26*k,.09);placeSeg(go.shaft,P1,bl,.11,.08);
   const kd=bl.clone().sub(P1).normalize();placeSeg(go.knob,bl,bl.clone().addScaledVector(kd,.3),1,1);
 }
 
+const PK=[.12,.19,.042];
 function buildPlayerStick(){
   const group=new THREE.Group();
-  const prof=new THREE.Shape();prof.moveTo(-.42,0);prof.lineTo(.3,0);prof.quadraticCurveTo(.46,0,.47,.1);prof.quadraticCurveTo(.47,.21,.33,.22);prof.lineTo(-.42,.2);prof.lineTo(-.42,0);
-  const bg=new THREE.ExtrudeGeometry(prof,{depth:.04,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:2,curveSegments:10});remapUV(bg);bg.translate(0,0,-.02);bg.rotateX(Math.PI/2);
-  const blade=new THREE.Mesh(bg,std({map:tapeTex(),roughness:.7}));group.add(blade);
-  const shaft=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({color:"#151517",roughness:.55,metalness:.05}));group.add(shaft);
-  const hosel=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({color:"#1b1b1d",roughness:.35}));group.add(hosel);
-  const stripe=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({color:"#d23a3a",roughness:.4}));group.add(stripe);
-  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;puck.position.set(.62,.06,.042);group.add(puck);
-  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({color:"#000",transparent:true,opacity:.12,depthWrite:false}));shadow.scale.set(1.5,.35,1);shadow.position.set(0,.05,.002);group.add(shadow);
-  return{group,blade,shaft,hosel,stripe,puck,mirror:1}
+  const prof=new THREE.Shape();prof.moveTo(-.4,.02);prof.quadraticCurveTo(-.4,0,-.35,0);prof.lineTo(.36,0);prof.quadraticCurveTo(.47,0,.47,.08);prof.quadraticCurveTo(.47,.165,.36,.17);prof.lineTo(-.28,.155);prof.quadraticCurveTo(-.37,.155,-.4,.11);prof.closePath();
+  const bg=new THREE.ExtrudeGeometry(prof,{depth:.026,bevelEnabled:true,bevelThickness:.005,bevelSize:.005,bevelSegments:2,curveSegments:12});remapUV(bg);bg.translate(0,0,-.013);bg.rotateX(Math.PI/2);
+  const bp=bg.attributes.position;for(let i=0;i<bp.count;i++){const t=clamp((bp.getX(i)+.4)/.87,0,1);bp.setY(i,bp.getY(i)+.085*t*t)}bp.needsUpdate=true;bg.computeVertexNormals();
+  const blade=new THREE.Mesh(bg,std({map:tapeTex(),roughness:.75}));group.add(blade);
+  const sg=new THREE.ExtrudeGeometry(rrShape(1,.72,.3),{depth:1,bevelEnabled:false,curveSegments:4});sg.translate(0,0,-.5);sg.rotateX(-Math.PI/2);sg.computeVertexNormals();
+  const shaft=new THREE.Mesh(sg,std({color:"#141416",roughness:.45,metalness:.1}));group.add(shaft);
+  const hosel=new THREE.Mesh(sg,std({color:"#141416",roughness:.45}));hosel.visible=false;group.add(hosel);
+  const stripe=new THREE.Mesh(sg,std({color:"#e9e9e6",roughness:.5}));group.add(stripe);
+  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;puck.position.set(PK[0],PK[1],PK[2]);group.add(puck);
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({color:"#000",transparent:true,opacity:.12,depthWrite:false}));shadow.visible=false;group.add(shadow);
+  return{group,blade,shaft,hosel,stripe,puck,shadow}
 }
-function poseStick(vm,cam,hand){
-  const hs=hand==="L"?-1:1;
-  if(vm.mirror!==hs){vm.mirror=hs;vm.group.scale.x=-hs}
-  const up=new THREE.Vector3(0,0,1).applyQuaternion(cam.quaternion.clone().invert());const x=new THREE.Vector3(1,0,0),y=new THREE.Vector3().crossVectors(up,x).normalize();const xx=new THREE.Vector3().crossVectors(y,up).normalize();
-  vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xx,y,up));vm.group.position.set(hs*.4,-1.0,-3.5);
-  const heel=new THREE.Vector3(-.42,0,.12),hands=new THREE.Vector3(-1.5,-2.6,3.4);placeSeg(vm.shaft,heel.clone().add(new THREE.Vector3(-.03,0,.16)),hands,.07,.05);
-  placeSeg(vm.hosel,heel.clone().add(new THREE.Vector3(.02,0,-.04)),heel.clone().add(new THREE.Vector3(-.04,0,.24)),.07,.05);
-  vm.stripe.visible=false;
-}
-function setCamera(T,eye,tgt,W,H){const F=Math.min(W*1.05,H*1.3);T.camera.fov=2*Math.atan(H/2/F)*180/Math.PI;T.camera.aspect=W/H;T.camera.position.set(eye[0],eye[1],eye[2]);T.camera.lookAt(tgt[0],tgt[1],tgt[2]);T.camera.updateProjectionMatrix();T.camera.updateMatrixWorld()}
+function poseStick(vm,P,hand){
+  const h=hand==="L"?-1:1,f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sx=-h;
+  const f=new THREE.Vector3(f2[0],f2[1],0),r=new THREE.Vector3(r2[0],r2[1],0),up=new THREE.Vector3(0,0,1);
+  vm.group.scale.x=sx;vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(r,f,up));
+  const pk=bladeOf(P,hand),off=r.clone().multiplyScalar(PK[0]*sx).addScaledVector(f,PK[1]);vm.group.position.set(pk[0]-off.x,pk[1]-off.y,0);
+  const hw=new THREE.Vector3(P[0],P[1],2.6).addScaledVector(r,h*.55).addScaledVector(f,.5),d=hw.clone().sub(vm.group.position),hl=new THREE.Vector3(d.dot(r)*sx,d.dot(f),d.z);
+  const heel=new THREE.Vector3(-.39,.005,.03),dir=hl.clone().sub(heel).normalize();placeSeg(vm.shaft,heel,hl,.062,.06);
+  placeSeg(vm.stripe,heel.clone().addScaledVector(dir,1.05),heel.clone().addScaledVector(dir,1.25),.066,.064)}
+function eyeTgt(eye){const f=n2([-eye[0],-eye[1]]),d=10;return[eye[0]+f[0]*d,eye[1]+f[1]*d,eye[2]-d*Math.tan(27*Math.PI/180)]}
+function setCamera(T,eye,tgt,W,H){tgt=tgt||eyeTgt(eye);const F=Math.min(H/(2*Math.tan(31*Math.PI/180)),W*1.2);T.camera.fov=2*Math.atan(H/2/F)*180/Math.PI;T.camera.aspect=W/H;T.camera.position.set(eye[0],eye[1],eye[2]);T.camera.lookAt(tgt[0],tgt[1],tgt[2]);T.camera.updateProjectionMatrix();T.camera.updateMatrixWorld()}
 function openGrid3(O){const T=three();T.goalie.group.updateMatrixWorld(true);const rc=new THREE.Raycaster(),o=new THREE.Vector3(...O),g=new Array(GX*GZ),targets=[];T.goalie.group.traverse(m=>{if(m.isMesh)targets.push(m)});
   for(let j=0;j<GZ;j++)for(let i=0;i<GX;i++){const p=new THREE.Vector3(-3+6*(i+.5)/GX,.02,4*(j+.5)/GZ),d=p.clone().sub(o),dist=d.length();rc.set(o,d.normalize());rc.far=dist-.05;g[j*GX+i]=rc.intersectObjects(targets,false).length===0}return g}
 function renderView(ctx2d,W,H,v){
-  const T=three();const cvs=T.renderer.domElement;if(cvs.width!==W||cvs.height!==H)T.renderer.setSize(W,H,false);setCamera(T,v.eye,v.tgt||[0,.4,1.25],W,H);
+  const T=three();const cvs=T.renderer.domElement;if(cvs.width!==W||cvs.height!==H)T.renderer.setSize(W,H,false);setCamera(T,v.eye,v.tgt,W,H);
   if(v.parts)poseGoalie(T.goalie,v.G,v.fg,v.parts);T.goalie.group.visible=!!v.parts;
   if(v.shadeFrom&&v.parts){const grid=openGrid3(v.shadeFrom);for(let k=0;k<GX*GZ;k++){const o=grid[k];T.data.set(o?[40,225,110,175]:[0,0,0,0],k*4)}T.dtex.needsUpdate=true;T.shade.visible=true}else T.shade.visible=false;
   if(v.puck){T.puck.visible=true;T.puck.position.set(...v.puck)}else T.puck.visible=false;
+  if(v.stick){poseStick(T.vm,[v.eye[0],v.eye[1]],v.hand);T.vm.group.visible=true;T.vm.puck.visible=v.stickPuck!==false}else T.vm.group.visible=false;
   T.renderer.clear();T.renderer.render(T.scene,T.camera);
-  if(v.stick){T.vmCam.fov=T.camera.fov;T.vmCam.aspect=W/H;T.vmCam.updateProjectionMatrix();poseStick(T.vm,T.camera,v.hand);T.vm.puck.visible=v.stickPuck!==false;T.renderer.clearDepth();T.renderer.render(T.vmScene,T.vmCam)}
   ctx2d.drawImage(T.renderer.domElement,0,0,W,H);
   if(v.flash){ctx2d.fillStyle=`rgba(224,56,62,${.35*v.flash})`;ctx2d.fillRect(0,0,W,H)}
 }
-function projectPts(v,W,H,pts){const T=three();setCamera(T,v.eye,[0,.4,1.25],W,H);return pts.map(p=>{const q=new THREE.Vector3(...p),c=q.clone().applyMatrix4(T.camera.matrixWorldInverse);if(c.z>-.2)return null;q.project(T.camera);return[(q.x+1)/2*W,(1-q.y)/2*H]})}
+function projCam(W,H,p){const T=three(),q=new THREE.Vector3(...p),c=q.clone().applyMatrix4(T.camera.matrixWorldInverse);if(c.z>-.2)return null;q.project(T.camera);return[(q.x+1)/2*W,(1-q.y)/2*H]}
+function projectPts(v,W,H,pts){const T=three();setCamera(T,v.eye,v.tgt,W,H);return pts.map(p=>projCam(W,H,p))}
 
 /* ---------- top-down view for behind-the-net reads ---------- */
 function renderTop(g,W,H,st){
@@ -593,96 +633,96 @@ function midWhy(base,c){return base+" "+(c.fhDir===-c.sx?"Your forehand is alrea
 
 /* ---------- the goalie reads ---------- */
 const CUES=[
- {id:"drop",name:"He drops down early",tip:"Shoot high",zones:["slot","wing"],
+ {id:"drop",look:"Look at his pads. They are flat on the ice, and his shoulders are low.",lookAt:"pads",kid:"He dropped down.",name:"He drops down early",tip:"Shoot high",zones:["slot","wing"],
   key:"He dropped down to the ice before you shot.",opens:"The top of the net. His shoulders are low, so both top corners are open.",
-  place:c=>({pos:stdPos(c.E,2),pose:"butterfly"}),
+  place:c=>({pos:stdPos(c.E,3),pose:"butterfly"}),
   rate:c=>({hg:B("He's down on the ice, so the top corners are wide open. Look up first."),hb:B("He's down on the ice, so the top corners are wide open. Look up first."),
    dfh:G("A deke can work because it's hard for him to move side to side when he's down. A high shot is quicker."),dbh:G("A deke can work because it's hard for him to move side to side when he's down. A high shot is quicker."),
    lg:L("His pads are flat on the ice and cover the bottom of the net."),lb:L("His pads are flat on the ice and cover the bottom of the net."),fh:L("When he drops, his pads and stick close the five-hole."),fake:L("He already went down, so you don't need to fake. Shoot high.")})},
- {id:"tall",name:"He stands tall and waits",tip:"Fake a shot, then deke",zones:["slot","wing"],
+ {id:"tall",look:"Look at his feet. He is standing still and waiting for you to go first.",lookAt:"pads",kid:"He's standing and waiting.",name:"He stands tall and waits",tip:"Fake a shot, then deke",zones:["slot","wing"],
   key:"He's standing up, square to you, and not moving. He's waiting for you to go first.",opens:"Space up high, and room to go around him once he moves.",
-  place:c=>({pos:stdPos(c.E,2.2),pose:"ready"}),
+  place:c=>({pos:stdPos(c.E,3.4),pose:"ready"}),
   rate:c=>({fake:B("He's waiting for you to go first. Fake a shot to make him drop or lean, then go around him."),
    hg:G("Young goalies leave space up high even when they stand. Pick a corner and shoot hard."),hb:G("Young goalies leave space up high even when they stand. Pick a corner and shoot hard."),
    dfh:G("A deke can work, but faking a shot first makes it work much better."),dbh:G("A deke can work, but faking a shot first makes it work much better."),
    lg:L("When he stands, his pads and stick cover the low corners."),lb:L("When he stands, his pads and stick cover the low corners."),fh:L("His pads are together, so the five-hole is closed.")})},
- {id:"challenge",name:"He comes way out",tip:"Deke wide around him",zones:["slot","wing"],
+ {id:"challenge",look:"Look how far he is from his net. He came way out of his crease.",lookAt:"body",kid:"He came way out.",name:"He comes way out",tip:"Deke wide around him",zones:["slot","wing"],
   key:"He came way out of his net to cut down your angle.",opens:"The sides. If you go wide around him, there's open net behind him.",
-  place:c=>({pos:stdPos(c.E,4.6),pose:"ready"}),
+  place:c=>({pos:stdPos(c.E,7),pose:"ready"}),
   rate:c=>({dfh:B("He's way out of his net. Go wide around him and he can't get back in time."),dbh:B("He's way out of his net. Go wide around him and he can't get back in time."),
    fake:G("A fake can freeze him, then you go around him."),hg:G("There's still some space up high, but he covers most of the net from out there."),hb:G("There's still some space up high, but he covers most of the net from out there."),
    lg:L("He's so far out that the bottom of the net is hidden behind him."),lb:L("He's so far out that the bottom of the net is hidden behind him."),fh:L("He's so far out that the bottom of the net is hidden behind him.")})},
- {id:"deep",name:"He stays deep in his net",tip:"Shoot early and high",zones:["slot","wing"],
+ {id:"deep",look:"Look at his feet. He is back near his goal line, so lots of net is showing.",lookAt:"pads",kid:"He's sitting back in his net.",name:"He stays deep in his net",tip:"Shoot early and high",zones:["slot","wing"],
   key:"He's sitting back on his goal line instead of coming out.",opens:"Lots of net, especially up high in both corners.",
-  place:c=>({pos:stdPos(c.E,.8),pose:"ready"}),
+  place:c=>({pos:stdPos(c.E,.9),pose:"ready"}),
   rate:c=>({hg:B("He's sitting back in his net, so more net is showing. Shoot early and aim high."),hb:B("He's sitting back in his net, so more net is showing. Shoot early and aim high."),
    lg:G("The low corners are open too because he's so far back."),lb:G("The low corners are open too because he's so far back."),fh:L("His stick is right in the middle of the five-hole."),
    dfh:L("A deke can work, but he's showing you lots of net right now. Take the shot."),dbh:L("A deke can work, but he's showing you lots of net right now. Take the shot."),fake:L("He's showing you lots of net right now. Take the shot.")})},
- {id:"gloveLow",name:"He holds his glove low",tip:"Shoot high, glove side",zones:["slot","wing"],
+ {id:"gloveLow",look:"Look at his glove. It is down by his pad.",lookAt:"glove",kid:"His glove is down low.",name:"He holds his glove low",tip:"Shoot high, glove side",zones:["slot","wing"],
   key:"His glove hand is down by his pad instead of up by his shoulder.",opens:"The top corner on his glove side.",
-  place:c=>({pos:stdPos(c.E,2),pose:"gloveLow"}),
+  place:c=>({pos:stdPos(c.E,3.2),pose:"gloveLow"}),
   rate:c=>({hg:B("His glove is down by his pad, so the top corner on his glove side is wide open."),hb:G("The top corner on his blocker side is open too."),
    lg:L("That's right where his glove is waiting."),lb:L("His pad and blocker cover that low corner."),fh:L("His stick covers the five-hole."),
    dfh:L("The open spot is up high. A quick shot gets there before he can lift his glove."),dbh:L("The open spot is up high. A quick shot gets there before he can lift his glove."),fake:L("The open spot is up high. A quick shot gets there before he can lift his glove.")})},
- {id:"cheat",name:"He cheats to your side",tip:"Shoot far side",zones:["wing"],
+ {id:"cheat",look:"Look where he is standing. He moved over to the post on your side.",lookAt:"body",kid:"He moved over to your side.",name:"He cheats to your side",tip:"Shoot far side",zones:["wing"],
   key:"He slid over toward the post on your side and left the far side open.",opens:"The far side of the net, high and low.",
-  place:c=>{const p=stdPos(c.E,2);return{pos:[clamp(p[0]+c.sx*.9,-2.7,2.7),p[1]],pose:"ready"}},
+  place:c=>{const p=stdPos(c.E,3.2);return{pos:[clamp(p[0]+c.sx*.9,-2.7,2.7),p[1]],pose:"ready"}},
   rate:c=>{const n=N(c),r={};r[n.fH]=B("He moved over to your side of the net. The far side has the most open net.");r[n.fL]=G("The far side low is open too.");
    r[n.nh]=L("That's the side he's covering.");r[n.nl]=L("That's the side he's covering.");r.fh=L("His stick still covers the five-hole.");
    r[dekeToward(-c.sx,c)]=G("Cutting across toward the far side makes him move a long way.");r[dekeToward(c.sx,c)]=L("Going to the outside takes you to the side he's already covering.");r.fake=L("You already have an open spot. Shoot to the far side.");return r}},
- {id:"legs",name:"He opens his legs",tip:"Five-hole",zones:["slot","wing"],
+ {id:"legs",look:"Look between his pads. There is a big gap.",lookAt:"fh",kid:"His legs are wide open.",name:"He opens his legs",tip:"Five-hole",zones:["slot","wing"],
   key:"His feet are wide apart, and there's a hole between his pads.",opens:"The five-hole, along the ice between his legs.",
-  place:c=>({pos:stdPos(c.E,2),pose:"legs"}),
+  place:c=>({pos:stdPos(c.E,3.2),pose:"legs"}),
   rate:c=>({fh:B("There's a big gap between his pads. Shoot along the ice right through it."),hg:G("Up high is open too. Young goalies leave lots of room up there."),hb:G("Up high is open too. Young goalies leave lots of room up there."),
    lg:L("His wide pads cover the low corners."),lb:L("His wide pads cover the low corners."),dfh:L("The five-hole is open right now. A quick shot is better than waiting."),dbh:L("The five-hole is open right now. A quick shot is better than waiting."),fake:L("The five-hole is open right now. Shoot before he closes it.")})},
- {id:"slide",name:"He slides side to side",tip:"Shoot back where he came from",zones:["slot"],win:[.42,1],
+ {id:"slide",look:"Look at his feet. He is pushing across the crease.",lookAt:"pads",kid:"He's sliding across.",name:"He slides side to side",tip:"Shoot back where he came from",zones:["slot"],win:[.42,1],
   key:"He's pushing across the crease from one side to the other.",opens:"The side he just left. He can't stop and go back fast.",
-  place:c=>({from:[-c.m*1.6,-1.9],pos:[c.m*1,-1.9],pose:"push"}),
+  place:c=>({from:[-c.m*1.6,-2.6],pos:[c.m*1,-2.6],pose:"push"}),
   rate:c=>{const back=-c.m,hB=back>0?"hg":"hb",lB=back>0?"lg":"lb",hT=back>0?"hb":"hg",lT=back>0?"lb":"lg",r={};
    r[hB]=B("He's sliding across. Shoot back to the side he just left. He can't stop and go back fast.");r[lB]=G("Low on the side he just left is open too.");r.fh=G("When a goalie pushes across, his legs open for a moment.");
    r[hT]=L("That's the side he's sliding to. He'll be there.");r[lT]=L("That's the side he's sliding to. He'll be there.");
    r[dekeToward(back,c)]=G("Cutting back the way he came can work.");r[dekeToward(-back,c)]=L("That's the way he's already going.");r.fake=L("He's already moving. Shoot now, before he gets set.");return r}},
- {id:"poke",name:"He pokes his stick out",tip:"Pull it wide around his stick",zones:["slot","wing"],decR:10.5,
+ {id:"poke",look:"Look at his stick. He is reaching it out at the puck.",lookAt:"stick",kid:"He's poking his stick at the puck.",name:"He pokes his stick out",tip:"Pull it wide around his stick",zones:["slot","wing"],decR:10.5,
   key:"He's reaching his stick out to knock the puck off your stick.",opens:"Space to the side of his stick, and space up high.",
-  place:c=>({pos:stdPos(c.E,2.4),pose:"poke"}),
+  place:c=>({pos:stdPos(c.E,3.6),pose:"poke"}),
   rate:c=>({dfh:B("He's reaching his stick out. Pull the puck wide around his stick, then shoot or tuck it in."),dbh:B("He's reaching his stick out. Pull the puck wide around his stick, then shoot or tuck it in."),
    hg:G("A quick, high shot before his stick gets to the puck can work."),hb:G("A quick, high shot before his stick gets to the puck can work."),
    lg:L("His stick is down along the ice, so low shots run into it."),lb:L("His stick is down along the ice, so low shots run into it."),fh:L("His stick is down along the ice, so low shots run into it."),fake:L("Faking gives his stick more time to reach the puck.")})},
- {id:"seal",name:"He seals the near post",tip:"Go behind the net or cut to the middle",zones:["sharp"],
+ {id:"seal",look:"Look at his pad. It is down tight against the post on your side.",lookAt:"post",kid:"He's down against the post.",name:"He seals the near post",tip:"Go behind the net or cut to the middle",zones:["sharp"],
   key:"He's down with his pad tight against the post on your side.",opens:"Very little from this angle. You have to make him move first.",
   place:c=>({pos:[c.sx*2.35,-.75],pose:"rvh"}),
   rate:c=>{const n=N(c),r={};r.behind=B("Take it behind the net and come out the other side. He has to get up and move across to stop you.");
    r.mid=B(midWhy("Pull it to the middle. He has to come off the post to follow you, and that opens up the net.",c));
    r[n.nh]=G("Young goalies leave a little room over the shoulder. It's a small spot, so you need a quick, high shot.");r[n.nl]=L("His pad is sealed on the ice right there.");
    r[n.fH]=L("From this sharp angle, you can barely see the far side.");r[n.fL]=L("From this sharp angle, you can barely see the far side.");r.fh=L("He's down on the ice, so there's no five-hole.");return r}},
- {id:"late",name:"He's late to the post",tip:"Shoot high at the near post",zones:["sharp","goalline"],win:[.4,1],
+ {id:"late",look:"Look at the post on your side. There is a gap between him and the post.",lookAt:"post",kid:"He's not on the post yet.",name:"He's late to the post",tip:"Shoot high at the near post",zones:["sharp","goalline"],win:[.4,1],
   key:"He isn't on the post yet. There's a gap between him and the post on your side.",opens:"The near post, up high over his shoulder and low by his pad.",
   place:c=>({from:[c.sx*.4,-1.7],pos:[c.sx*1.45,-1.25],pose:"ready"}),
   rate:c=>{const n=N(c),r={};r[n.nh]=B("He isn't on the post yet. Shoot high at the near post, over his shoulder.");r[n.nl]=G("The gap between his pad and the post can work too, but you have to be quick.");
    r.jam=G("Jamming it at the post can work before he gets there.");r[n.fH]=L("From this angle, there's very little far side to shoot at.");r[n.fL]=L("From this angle, there's very little far side to shoot at.");
    r.fh=L("His pads are close together while he moves.");["mid","behind","front","tuck"].forEach(k=>r[k]=L("He isn't set yet. Shoot now, before he gets there."));return r}},
- {id:"hug",name:"He hugs the post",tip:"Walk it out front",zones:["goalline"],
+ {id:"hug",look:"Look at the post. He is stuck tight to it.",lookAt:"post",kid:"He's stuck to the post.",name:"He hugs the post",tip:"Walk it out front",zones:["goalline"],
   key:"He's tight on the post on your side and isn't leaving it.",opens:"The front of the net, once you pull him off the post.",
   place:c=>({pos:[c.sx*2.4,-.7],pose:"rvh"}),
   rate:c=>{const r={};r.front=B(midWhy("Walk it out in front. He has to leave the post to follow you, and that opens up the net.",c));r.behind=G("Going behind the net makes him move too.");
    r.tuck=G("Pulling it across the crease can work if you're quick. Watch for his stick.");r.jam=L("He's sealed the post. A jam runs right into his pad.");
    SHOTS.forEach(k=>r[k]=L("From the goal line there's almost no net to shoot at while he's on the post."));return r}},
- {id:"early",name:"He leaves the post too early",tip:"Shoot at the near post",zones:["goalline"],win:[.45,1],
+ {id:"early",look:"Look at the post on your side. He left it open.",lookAt:"post",kid:"He left the post too soon.",name:"He leaves the post too early",tip:"Shoot at the near post",zones:["goalline"],win:[.45,1],
   key:"He thought you would cut across, so he slid off your post too early.",opens:"The near post, the side he just left.",
   place:c=>({from:[c.sx*2.2,-.8],pos:[-c.sx*.5,-1.35],pose:"ready"}),
   rate:c=>{const n=N(c),r={};r[n.nh]=B("He left your post too early. Stop and shoot right at the near post, up high.");r[n.nl]=G("Low by the post is open too.");r.jam=G("Jam it at the post he just left.");
    r.behind=G("Going back behind the net also works because he's moving the wrong way.");r.front=L("Walking out front takes you right to where he's going.");r.tuck=L("Cutting across the crease takes you right into him.");
    r[n.fH]=L("That's the side he's moving to.");r[n.fL]=L("That's the side he's moving to.");return r}},
- {id:"scramble",name:"He's scrambling across",tip:"Shoot high, near side",zones:[],win:[0,.95],
+ {id:"scramble",look:"Look at him. He is still sliding over, and he is down on the ice.",lookAt:"pads",kid:"He's still sliding over.",name:"He's scrambling across",tip:"Shoot high, near side",zones:[],win:[0,.95],
   key:"He's still sliding across to get to your side of the net.",opens:"Your side of the net, before he gets there.",
   place:c=>({from:c.g0||[-c.sx*2.2,-.8],pos:[c.sx*.35,-1.2],pose:"butterfly"}),
   rate:c=>{const n=N(c),r={};r[n.nh]=B("He's still sliding across to your side. Shoot high on the near side before he gets there.");r[n.nl]=G("Low on the near side can work too, but his pad is sliding that way.");
    r.fh=G("His legs are spread while he slides, so the five-hole can open.");r[n.fH]=L("That's the side he's coming from. He's still covering it.");r[n.fL]=L("That's the side he's coming from. He's still covering it.");
    r.mid=L("He isn't set yet. Shoot now instead of carrying it farther.");return r}},
- {id:"bFollow",name:"Behind the net, he slides over early",tip:"Reverse out the same side",zones:[],top:true,
+ {id:"bFollow",look:"Watch which post he goes to while you are behind the net. He slid over to the other post.",lookAt:"",kid:"He slid over to the other post.",name:"Behind the net, he slides over early",tip:"Reverse out the same side",zones:[],top:true,
   key:"While you were behind the net, he slid over to the other post to wait for you.",opens:"The post he just left, on the side you went in.",
   rate:c=>({reverse:B("He slid over early to the other post. Stop and reverse back to the side he left."),carry:L("He's already waiting on that side."),wrap:L("He's set on that post, so a wraparound runs into his pad.")})},
- {id:"bStay",name:"Behind the net, he stays on his post",tip:"Come out the other side",zones:[],top:true,
+ {id:"bStay",look:"Watch which post he goes to while you are behind the net. He stayed on the post where you went in.",lookAt:"",kid:"He stayed on his post.",name:"Behind the net, he stays on his post",tip:"Come out the other side",zones:[],top:true,
   key:"While you were behind the net, he stayed on the post where you went in.",opens:"The other side of the net.",
   rate:c=>({carry:B("He's stuck on the post where you went in. Come out the other side and you'll have open net."),wrap:G("A wraparound can work if you're quick, but coming out front gives you a better chance."),reverse:L("He's still on that side, waiting.")})}
 ];
@@ -694,7 +734,7 @@ const RLABEL={best:"Best read",good:"Good read",less:"Less likely"};
 /* ---------- approach model ---------- */
 function goalieAt(ap,u){
   const cue=CUE[ap.cueId],c=ap.ctx,Pt=l2(ap.S,ap.E,eo(u)),w=cue.win||[.38,.78];
-  const fin=cue.place(c),track=ap.g0||stdPos(Pt,2);
+  const fin=cue.place(c),track=ap.g0||stdPos(Pt,clamp(3+(Math.hypot(Pt[0],Pt[1])-12)*.09,3,4.8));
   const a2=sm((u-w[0])/(w[1]-w[0])),a1=sm((u-w[0])/((w[1]-w[0])*.3));
   const pos=fin.from?l2(l2(track,fin.from,a1),fin.pos,a2):l2(track,fin.pos,a2);
   const fg=n2([Pt[0]-pos[0],Pt[1]-pos[1]]),Lv=[-fg[1],fg[0]];
@@ -705,7 +745,7 @@ function goalieAt(ap,u){
 /* ---------- screens ---------- */
 const $=s=>document.querySelector(s);
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!==id);if(id!=="game"){stopLoop();releaseWake()}window.scrollTo(0,0)}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;const t=b.dataset.go;if(t==="menu")openMenu();else if(t==="learn")openLearn();else show(t)});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(!b)return;const t=b.dataset.go;if(t==="menu")openMenu();else if(t==="learn")openLearn();else if(t==="home")renderHome();else show(t)});
 function initials(n){return (n||"?").trim()[0]?.toUpperCase()||"?"}
 function renderHome(){const el=$("#playerList");el.innerHTML="";DB.profiles.forEach(p=>{const b=document.createElement("button");b.className="pcard";
   b.innerHTML=`<div class="jersey">${initials(p.name)}</div><div><div class="name"></div><div class="muted"></div><div class="muted"></div></div>`;
@@ -724,7 +764,7 @@ function queueThumb(cue,img){const key=cue.id+"|"+PR.goalieAge+"|"+PR.shoots;if(
 function runThumbs(){const job=thumbQ.shift();if(!job){thumbBusy=false;return}thumbBusy=true;setTimeout(()=>{try{const [cue,img,key]=job;if(!THUMBS[key])THUMBS[key]=makeThumb(cue);img.src=THUMBS[key]}catch(e){}runThumbs()},16)}
 function makeThumb(cue){const W=300,H=340,cv=document.createElement("canvas");cv.width=W;cv.height=H;const ctx=cv.getContext("2d");const snap=lessonSnap(cue);
   if(snap.kind==="top"){renderTop(ctx,W,H,snap.top)}
-  else{const G=snap.G,d=n2([snap.P[0]-G[0],snap.P[1]-G[1]]);renderView(ctx,W,H,{eye:[G[0]+d[0]*6.2,G[1]+d[1]*6.2,2.6],tgt:[G[0],G[1],1.9],G,fg:snap.fg,parts:snap.parts})}
+  else{const G=snap.G,d=n2([snap.P[0]-G[0],snap.P[1]-G[1]]);renderView(ctx,W,H,{eye:[G[0]+d[0]*5.4,G[1]+d[1]*5.4,2.6],tgt:[G[0],G[1],1.9],G,fg:snap.fg,parts:snap.parts})}
   return cv.toDataURL("image/jpeg",.82)}
 function openLearn(){const el=$("#lessonList");el.innerHTML="";CUES.forEach(cue=>{const b=document.createElement("button");b.className="lcard"+(PR.learned[cue.id]?" done":"");
   b.innerHTML=`<span class="thumb"><img alt=""></span><span class="check">${PR.learned[cue.id]?"&#10003;":""}</span><span class="z"></span><span class="t"></span><span class="tip"></span>`;queueThumb(cue,b.querySelector(".thumb img"));
@@ -735,23 +775,64 @@ function openLearn(){const el=$("#lessonList");el.innerHTML="";CUES.forEach(cue=
 let viewMode="eyes";
 function setSeg(seg,mode){seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===mode))}
 function sizeCanvas(cv){const r=cv.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);cv.width=Math.max(10,Math.round(r.width*d));cv.height=Math.max(10,Math.round(r.height*d));return{W:cv.width,H:cv.height}}
-function drawSnapshot(container,snap,mode,capEl){
+function targetWorld(id,snap){if(id==="fh"){const P=snap.P,G=snap.G,t=(0-P[1])/((G[1]-P[1])||-1);return[clamp(P[0]+(G[0]-P[0])*t,-1.5,1.5),.05,.5]}const t=TGT[id];return t?[t[0],.05,t[1]]:null}
+function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.032);
+  const star=(x,y,R)=>{g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}g.closePath();g.fillStyle="#ffd34d";g.fill();g.lineWidth=2;g.strokeStyle="#5a4300";g.stroke()};
+  (marks.best||[]).forEach(id=>{const w=targetWorld(id,snap);const p=w&&projCam(W,H,w);if(!p)return;g.fillStyle="rgba(30,170,90,.35)";g.strokeStyle="#45d483";g.lineWidth=Math.max(3,r*.18);g.beginPath();g.arc(p[0],p[1],r,0,Math.PI*2);g.fill();g.stroke();star(p[0],p[1],r*.62)});
+  if(marks.chosen&&SHOTS.includes(marks.chosen)){const w=targetWorld(marks.chosen,snap),p=w&&projCam(W,H,w);if(p){g.save();g.setLineDash([6,5]);g.strokeStyle="#ffffff";g.lineWidth=Math.max(3,r*.16);g.beginPath();g.arc(p[0],p[1],r*1.25,0,Math.PI*2);g.stroke();g.restore();
+    const fs=Math.max(12,r*.75);g.font=`800 ${fs}px -apple-system,system-ui,sans-serif`;const tw=g.measureText("YOU").width;g.fillStyle="rgba(10,16,30,.9)";g.fillRect(p[0]-tw/2-6,p[1]-r*1.25-fs*1.5,tw+12,fs*1.35);g.fillStyle="#fff";g.textAlign="center";g.fillText("YOU",p[0],p[1]-r*1.25-fs*.45);g.textAlign="start"}}}
+function drawSnapshot(container,snap,mode,capEl,marks){
   container.innerHTML="";container.className="views"+(mode==="both"&&snap.kind==="fp"?" two":"");
   if(snap.kind==="top"){const w=document.createElement("div");w.className="vlabel";const cv=document.createElement("canvas");w.appendChild(cv);container.appendChild(w);requestAnimationFrame(()=>{const {W,H}=sizeCanvas(cv);renderTop(cv.getContext("2d"),W,H,snap.top)});
-    if(capEl)capEl.textContent="Seen from above. The arrows show your three choices.";return}
+    if(capEl)capEl.textContent="Seen from above. The arrows show the three ways out.";return}
   const list=mode==="both"?["eyes","blade"]:[mode];
-  const cvs=[];list.forEach(m=>{const w=document.createElement("div");w.className="vlabel";w.innerHTML=`<span>${m==="eyes"?"Your eyes":"Your stick blade"}</span>`;const cv=document.createElement("canvas");w.appendChild(cv);container.appendChild(w);cvs.push([m,cv])});
+  const cvs=[];list.forEach(m=>{const w=document.createElement("div");w.className="vlabel";w.innerHTML=`<span>${m==="eyes"?"My eyes":"My stick blade"}</span>`;const cv=document.createElement("canvas");w.appendChild(cv);container.appendChild(w);cvs.push([m,cv])});
   const eye=[snap.P[0],snap.P[1],snap.eyeH],blade=bladeOf(snap.P,snap.hand);
-  requestAnimationFrame(()=>{cvs.forEach(([m,cv])=>{const {W,H}=sizeCanvas(cv);renderView(cv.getContext("2d"),W,H,{eye:m==="eyes"?eye:blade,tgt:m==="eyes"?[0,.4,1.25]:[0,.4,1.0],G:snap.G,fg:snap.fg,parts:snap.parts,shadeFrom:m==="eyes"?eye:blade,hand:snap.hand,stick:m==="eyes"})})});
+  container._views=[];container._snap=snap;
+  requestAnimationFrame(()=>{cvs.forEach(([m,cv])=>{const {W,H}=sizeCanvas(cv);const g2=cv.getContext("2d");renderView(g2,W,H,{eye:m==="eyes"?eye:blade,tgt:m==="eyes"?null:[0,.4,1.0],G:snap.G,fg:snap.fg,parts:snap.parts,shadeFrom:m==="eyes"?eye:blade,hand:snap.hand,stick:m==="eyes"});drawMarks(g2,W,H,snap,marks);
+    const base=document.createElement("canvas");base.width=W;base.height=H;base.getContext("2d").drawImage(cv,0,0);container._views.push({m,cv,base,W,H})});if(container._onReady){const f=container._onReady;container._onReady=null;f()}});
   if(capEl){poseGoalie(three().goalie,snap.G,snap.fg,snap.parts);const e=openStats(openGrid3(eye)),b=openStats(openGrid3(blade));
-    let cmp;if(b.lo<e.lo-.08)cmp="From your stick blade, the bottom of the net is more covered than it looks from your eyes.";else if(b.lo>e.lo+.08)cmp="From your stick blade, there's more open net down low than your eyes can see.";
-    else if(b.hi<e.hi-.08)cmp="From your stick blade, the top of the net is a little more covered than it looks from your eyes.";else if(b.hi>e.hi+.08)cmp="From your stick blade, there's more open net up high than your eyes can see.";else cmp="Here, your eyes and your stick blade see about the same open net.";
-    capEl.textContent=(mode==="blade"?"Green is open net from your stick blade, where the shot really starts. ":mode==="both"?"Green is open net from each spot. ":"Green is open net from your eyes. ")+cmp}}
-
+    let cmp;if(b.lo<e.lo-.08)cmp="Your stick blade sees less open net down low.";else if(b.lo>e.lo+.08)cmp="Your stick blade sees more open net down low.";
+    else if(b.hi<e.hi-.08)cmp="Your stick blade sees less open net up high.";else if(b.hi>e.hi+.08)cmp="Your stick blade sees more open net up high.";else cmp="Your eyes and your stick blade see about the same.";
+    capEl.textContent="Green = open net. Star = best spot. "+cmp}}
+/* coach narration with highlights */
+let HL=null;
+function lookPoint(d){const cue=CUE[d.cueId],snap=d.snap;if(snap.kind!=="fp"||!cue.lookAt)return null;const go=three().goalie;poseGoalie(go,snap.G,snap.fg,snap.parts);go.group.updateMatrixWorld(true);
+  const at=cue.lookAt,P=k=>go.P[k].holder.position;if(at==="pads"){const a=P("padL"),b=P("padR");return[(a.x+b.x)/2,(a.y+b.y)/2,.9]}
+  if(at==="fh")return targetWorld("fh",snap);if(at==="post")return[d.ctx.sx*3,0,1.6];if(at==="stick"){const p=go.blade.position;return[p.x,p.y,.25]}const p=P(at);return[p.x,p.y,p.z]}
+function setHighlight(container,snap,pt){if(HL){cancelAnimationFrame(HL.raf);HL=null}const views=container._views;if(!views||!views.length)return;
+  if(!pt){views.forEach(v=>v.cv.getContext("2d").drawImage(v.base,0,0));return}
+  const eye=[snap.P[0],snap.P[1],snap.eyeH],bl=bladeOf(snap.P,snap.hand);const pts=views.map(v=>{setCamera(three(),v.m==="eyes"?eye:bl,v.m==="eyes"?null:[0,.4,1.0],v.W,v.H);return projCam(v.W,v.H,pt)});
+  const t0=performance.now(),h=HL={};const loop=()=>{if(HL!==h)return;const t=(performance.now()-t0)/1000;views.forEach((v,i)=>{const g=v.cv.getContext("2d");g.drawImage(v.base,0,0);const p=pts[i];if(!p)return;const R=Math.max(24,v.W*.065)*(1+.1*Math.sin(t*6));
+    g.save();g.lineWidth=Math.max(4,v.W*.009);g.strokeStyle="#ffcf3a";g.shadowColor="rgba(0,0,0,.65)";g.shadowBlur=10;g.beginPath();g.arc(p[0],p[1],R,0,Math.PI*2);g.stroke();
+    const k=R*.75,ex=p[0]-k,ey=p[1]-k;g.beginPath();g.moveTo(ex-R*1.2,ey-R*1.2);g.lineTo(ex,ey);g.moveTo(ex,ey);g.lineTo(ex-R*.5,ey);g.moveTo(ex,ey);g.lineTo(ex,ey-R*.5);g.stroke();g.restore()});h.raf=requestAnimationFrame(loop)};loop()}
+const VOICE={unlocked:false};
+function voiceOn(){return DB.voice!==false&&"speechSynthesis" in window}
+document.addEventListener("click",()=>{if(VOICE.unlocked||!("speechSynthesis" in window))return;try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u);VOICE.unlocked=true}catch(e){}},true);
+let NARR=null;
+function joinList(a){return a.length<2?a.join(""):a.slice(0,-1).join(", ")+(a.length>2?",":"")+" and "+a[a.length-1]}
+function buildNarration(d){const cue=CUE[d.cueId],r=d.rates,ids=Object.keys(r),Lb=k=>label(k,d.ctx).toLowerCase(),shot=k=>SHOTS.includes(k)&&d.snap.kind==="fp"?targetWorld(k,d.snap):null;
+  const best=ids.filter(k=>r[k][0]==="best"),good=ids.filter(k=>r[k][0]==="good"),less=ids.filter(k=>r[k][0]==="less"),steps=[];
+  steps.push({text:cue.look,pt:lookPoint(d)});
+  steps.push({text:`So the best play is: ${cue.tip.toLowerCase()}. ${r[best[0]][1]}`,tiles:best,pt:best.map(shot).find(Boolean)||null});
+  const groups=list=>{const m=new Map();list.forEach(k=>{const w=r[k][1];if(!m.has(w))m.set(w,[]);m.get(w).push(k)});return[...m.entries()]};
+  groups(good).forEach(([why,ks])=>steps.push({text:`${joinList(ks.map(Lb)).replace(/^./,c=>c.toUpperCase())} can work too. ${why}`,tiles:ks,pt:ks.map(shot).find(Boolean)||null}));
+  groups(less).forEach(([why,ks])=>steps.push({text:`${joinList(ks.map(Lb)).replace(/^./,c=>c.toUpperCase())}: not this time. ${why}`,tiles:ks,pt:ks.map(shot).find(Boolean)||null}));
+  if(!d.choice)steps.push({text:"Time ran out. Next time, look at the goalie early and pick faster."});
+  else steps.push({text:d.r==="best"?`You picked ${Lb(d.choice)}. That was the best read. Nice job!`:d.r==="good"?`You picked ${Lb(d.choice)}. That's a good read. Next time, try to ${cue.tip.toLowerCase()}.`:`You picked ${Lb(d.choice)}. Next time, look at the goalie first, then ${cue.tip.toLowerCase()}.`,tiles:[d.choice],pt:shot(d.choice)});
+  return steps}
+function clearLit(){document.querySelectorAll(".ptile.lit").forEach(t=>t.classList.remove("lit"))}
+function stopNarration(){if(NARR){NARR.stopped=true;clearTimeout(NARR.timer);clearTimeout(NARR.safety)}NARR=null;try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}clearLit();const v=$("#dbViews");if(v._snap)setHighlight(v,v._snap,null);$("#dbCoach").textContent="Hear the coach"}
+function say(text,N,done){let fired=false;const fin=()=>{if(fired)return;fired=true;clearTimeout(N.safety);done()};
+  if(voiceOn()){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.95;u.pitch=1.05;u.lang="en-US";u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){}N.safety=setTimeout(fin,2500+text.length*85)}else N.safety=setTimeout(fin,1800+text.length*55)}
+function runNarration(d){stopNarration();const steps=buildNarration(d),N=NARR={i:0,stopped:false};$("#dbCoach").textContent="Stop the coach";
+  const next=()=>{if(N.stopped)return;if(N.i>=steps.length){NARR=null;clearLit();setHighlight($("#dbViews"),d.snap,null);$("#dbCoach").textContent="Hear the coach again";$("#dbWhy").textContent="Tap any play to see why.";return}
+    const st=steps[N.i++];document.querySelectorAll(".ptile").forEach(t=>t.classList.toggle("lit",(st.tiles||[]).includes(t.dataset.id)));$("#dbWhy").textContent=st.text;
+    if(d.snap.kind==="fp")setHighlight($("#dbViews"),d.snap,st.pt||null);say(st.text,N,()=>{N.timer=setTimeout(next,450)})};next()}
 /* lesson */
 let LES=null;
 function lessonSnap(cue){const zone=cue.zones[0]||(cue.id==="scramble"?"phase3":"sharp"),sx=1,k=GK[PR.goalieAge]||1;
-  const r={slot:[0,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8],goalline:[sx*9.5,-2.1],phase3:[sx*7.2,-7.4]}[zone];
+  const r={slot:[0,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8],goalline:[sx*11,-2.7],phase3:[sx*7.2,-7.4]}[zone];
   const c={sx,zone,fhDir:PR.shoots==="L"?-1:1,k,m:1,E:r,g0:[-sx*2.2,-.8]};
   if(cue.top){const variant=cue.id==="bFollow"?"follow":"stay";return{kind:"top",c:{...c,zone:"behind"},top:topScene(sx,variant,"decide",1,c)}}
   const ap={S:r,E:r,cueId:cue.id,ctx:c,g0:cue.id==="scramble"?c.g0:null};const gs=goalieAt(ap,1);
@@ -759,8 +840,8 @@ function lessonSnap(cue){const zone=cue.zones[0]||(cue.id==="scramble"?"phase3":
 function openLesson(id){const cue=CUE[id];LES={cue,snap:lessonSnap(cue)};$("#lesTitle").textContent=cue.name;$("#lesZone").textContent=cue.top?ZONES.behind:(cue.zones.length?ZONES[cue.zones[0]]:ZONES.phase3);
   $("#lesKey").textContent=cue.key;$("#lesOpens").textContent=cue.opens;$("#lesSeg").hidden=LES.snap.kind==="top";
   const c=LES.snap.c,opts=OPTS[c.zone];renderOptList($("#lesOpts"),fullRate(cue,c,opts),c,null,`Your plays here (${PR.shoots==="L"?"left":"right"} shot)`);
-  $("#lesGot").textContent=PR.learned[id]?"Learned":"I've got it";$("#lesPractice").hidden=!cue.zones.length;viewMode="eyes";setSeg($("#lesSeg"),viewMode);show("lesson");drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"))}
-$("#lesSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#lesSeg"),viewMode);drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"))};
+  $("#lesGot").textContent=PR.learned[id]?"Learned":"I've got it";LES.marks={best:Object.entries(fullRate(cue,c,opts)).filter(([k,v])=>v[0]==="best").map(([k])=>k)};$("#lesPractice").hidden=!cue.zones.length;viewMode="eyes";setSeg($("#lesSeg"),viewMode);show("lesson");drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"),LES.marks)}
+$("#lesSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#lesSeg"),viewMode);drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"),LES.marks)};
 $("#lesGot").onclick=()=>{PR.learned[LES.cue.id]=true;save();$("#lesGot").textContent="Learned";setTimeout(openLearn,250)};
 $("#lesPractice").onclick=()=>{PR.learned[LES.cue.id]=true;save();startRound("learn",LES.cue.id)};
 function renderOptList(el,rates,c,chosen,title){el.innerHTML="";if(title){const h=document.createElement("div");h.className="k muted";h.style.cssText="font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700";h.textContent=title;el.appendChild(h)}
@@ -782,14 +863,14 @@ function buildSpot(zone,sx,cue){let S,E;
   if(zone==="slot"){const th=rnd(3,16)*sx*Math.PI/180,r=cue.decR||14;E=[r*Math.sin(th),-r*Math.cos(th)];S=[E[0]*.4+sx*rnd(2,8),-38]}
   else if(zone==="wing"){const th=rnd(30,46)*sx*Math.PI/180,r=cue.decR||15.5;E=[r*Math.sin(th),-r*Math.cos(th)];S=[sx*rnd(20,26),-40]}
   else if(zone==="sharp"){const th=rnd(62,70)*sx*Math.PI/180,r=11;E=[r*Math.sin(th),-r*Math.cos(th)];S=[sx*25,-24]}
-  else{E=[sx*rnd(9,10),-rnd(1.8,2.4)];S=[sx*25,6]}
+  else{E=[sx*rnd(10.5,11.5),-rnd(2.4,3)];S=[sx*25,6]}
   return{S,E}}
 function nextRep(){if(ROUND.i>=ROUND.count)return showSummary();ROUND.i++;$("#hudRep").textContent=`${ROUND.i} of ${ROUND.count}`;
   const cue=ROUND.seq?CUE[ROUND.seq[ROUND.i-1]]:pickCue(ROUND.pool),zone=pick(cue.zones),sx=Math.random()<.5?-1:1,{S,E}=buildSpot(zone,sx,cue);
   const ctx={sx,zone,fhDir:PR.shoots==="L"?-1:1,k:GK[PR.goalieAge]||1,m:Math.random()<.5?-1:1,E};
   REP={decisions:[],result:null};startApproach({S,E,cueId:cue.id,ctx,dur:ROUND.mode==="game"?2.3:3.1})}
 function startApproach(ap,replay){ST={mode:"approach",t:0,ap,replay};hideUI();$("#prompt").hidden=false;$("#prompt").textContent=replay?"Watch the goalie":"Watch the goalie as you skate in";startLoop()}
-function hideUI(){$("#tapLayer").innerHTML="";$("#playBar").innerHTML="";$("#banner").hidden=true;$("#timer").hidden=true;$("#askOverlay").hidden=true;$("#debrief").hidden=true;$("#prompt").hidden=true}
+function hideUI(){$("#tapLayer").innerHTML="";$("#playBar").innerHTML="";$("#playBar").className="";$("#banner").hidden=true;$("#timer").hidden=true;$("#askOverlay").hidden=true;$("#debrief").hidden=true;$("#prompt").hidden=true}
 function startLoop(){cancelAnimationFrame(raf);last=performance.now();raf=requestAnimationFrame(loop)}
 function stopLoop(){cancelAnimationFrame(raf);raf=0}
 function releaseWake(){try{wake&&wake.release();wake=null}catch(e){}}
@@ -816,7 +897,7 @@ function placeTargets(){const s=ST,tl=$("#tapLayer"),pb=$("#playBar");tl.innerHT
   const shots=s.opts.filter(o=>SHOTS.includes(o)),plays=s.opts.filter(o=>!SHOTS.includes(o));
   const gs=goalieAt(s.ap,1);const fhPt=(()=>{const P=gs.P,Gp=gs.G,t=(0-P[1])/(Gp[1]-P[1]||-1);return[clamp(P[0]+(Gp[0]-P[0])*t,-1.5,1.5),.5]})();
   const pts=projectPts(v,W,H,shots.map(id=>{const t=id==="fh"?fhPt:TGT[id];return[t[0],.05,t[1]]})).map(p=>p&&[p[0]/DPR,p[1]/DPR]);
-  let ok=pts.every(p=>p&&p[0]>40&&p[0]<innerWidth-40&&p[1]>90&&p[1]<innerHeight-150);
+  pb.className="side"+(PR.shoots==="R"?" lefty":"");$("#prompt").hidden=true;let ok=pts.every(p=>p&&p[0]>40&&p[0]<innerWidth-40&&p[1]>64&&p[1]<innerHeight-60);
   for(let i=0;ok&&i<pts.length;i++)for(let j=i+1;j<pts.length;j++)if(Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1])<78)ok=false;
   if(ok){shots.forEach((id,i)=>{const b=document.createElement("button");b.className="tgt";b.style.left=pts[i][0]+"px";b.style.top=pts[i][1]+"px";b.setAttribute("aria-label",label(id,cx));b.innerHTML="<span></span>";b.querySelector("span").textContent=label(id,cx);b.onclick=()=>choose(id);tl.appendChild(b)})}
   else shots.forEach(id=>{const b=document.createElement("button");b.className="btn shot";b.textContent="Shoot: "+label(id,cx);b.onclick=()=>choose(id);pb.appendChild(b)});
@@ -854,7 +935,7 @@ function startBehind(cx,E){const sx=cx.sx,variant=Math.random()<.5?"follow":"sta
   ST={mode:"topAnim",t:0,cx,variant,entry,top:{...topScene(sx,variant,"anim",0),player:E}};$("#prompt").hidden=false;$("#prompt").textContent="Behind the net. Watch what the goalie does.";startLoop()}
 function topAnimStep(s){const u=clamp(s.t/1.9,0,1),sx=s.cx.sx;const p=pathAt(s.entry,eo(u));s.top={...topScene(sx,s.variant,"anim",clamp((u-.25)/.6,0,1)),player:p};s.top.goalie.fg=n2([p[0]-s.top.goalie.pos[0],p[1]-s.top.goalie.pos[1]]);
   if(u>=1){if(s.replay){openDebrief(s.replay.idx);return}s.mode="topDecide";s.t0=performance.now();s.top=topScene(sx,s.variant,"decide",1);$("#prompt").textContent="Which way do you come out?";
-    if(ROUND.mode==="game"){$("#timer").hidden=false}const pb=$("#playBar");pb.innerHTML="";["carry","reverse","wrap"].forEach(id=>{const b=document.createElement("button");b.className="btn";b.style.borderColor={carry:"#3f7bea",reverse:"#e0383e",wrap:"#9a72e8"}[id];b.textContent=label(id,{zone:"behind"});b.onclick=()=>chooseTop(id);pb.appendChild(b)})}}
+    if(ROUND.mode==="game"){$("#timer").hidden=false}const pb=$("#playBar");pb.innerHTML="";pb.className="";["carry","reverse","wrap"].forEach(id=>{const b=document.createElement("button");b.className="btn";b.style.borderColor={carry:"#3f7bea",reverse:"#e0383e",wrap:"#9a72e8"}[id];b.textContent=label(id,{zone:"behind"});b.onclick=()=>chooseTop(id);pb.appendChild(b)})}}
 function chooseTop(id){const s=ST;if(s.mode!=="topDecide")return;const cueId=s.variant==="follow"?"bFollow":"bStay",cx={...s.cx,zone:"behind"};const rates=fullRate(CUE[cueId],cx,OPTS.behind),r=id?rates[id][0]:"less";
   REP.decisions.push({cueId,ctx:cx,snap:{kind:"top",c:cx,top:topScene(s.cx.sx,s.variant,"decide",1)},choice:id,rates,r,ms:performance.now()-s.t0,timeout:!id,topReplay:{cx:s.cx,variant:s.variant,entry:s.entry}});
   $("#playBar").innerHTML="";$("#timer").hidden=true;const sx=s.cx.sx;const c=id||"carry",e=c==="reverse"?sx:-sx;
@@ -870,19 +951,26 @@ function topOutStep(s){const u=clamp(s.t/.9,0,1),sx=s.cx.sx;const p=pathAt(s.pat
 let DBI=0;
 function openDebrief(idx){stopLoop();ST={mode:"debrief"};DBI=idx||0;const ds=REP.decisions;$("#debrief").hidden=false;$("#prompt").hidden=true;$("#playBar").innerHTML="";$("#tapLayer").innerHTML="";$("#banner").hidden=true;
   $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count}`;$("#dbResult").innerHTML=REP.result==="goal"?'<span style="color:var(--red)">Goal</span>':'<span>Save</span>';
-  const tabs=$("#dbTabs");tabs.innerHTML="";if(ds.length>1){ds.forEach((d,i)=>{const b=document.createElement("button");b.textContent=i===0?"First read":d.snap.kind==="top"?"Behind the net":"Coming out front";b.setAttribute("aria-pressed",i===DBI);b.onclick=()=>openDebrief(i);tabs.appendChild(b)})}
+  const tabs=$("#dbTabs");tabs.innerHTML="";if(ds.length>1){ds.forEach((d,i)=>{const b=document.createElement("button");b.onclick=null;b.textContent=i===0?"First read":d.snap.kind==="top"?"Behind the net":"Coming out front";b.setAttribute("aria-pressed",i===DBI);b.onclick=()=>openDebrief(i);tabs.appendChild(b)})}
   const d=ds[DBI],cue=CUE[d.cueId];$("#dbSeg").hidden=d.snap.kind==="top";setSeg($("#dbSeg"),viewMode);
-  const v=d.timeout?"Time ran out. Next time, pick a little sooner.":d.r==="best"?"Great read.":d.r==="good"?"Good read.":"Here's a better option.";
-  let extra="";if(!d.timeout&&DBI===ds.length-1){if(d.r!=="less"&&REP.result==="save")extra=" Good reads get saved sometimes too. Keep making them.";if(d.r==="less"&&REP.result==="goal")extra=" It went in this time. The best read below works more often."}
-  $("#dbVerdict").textContent=v+extra;$("#dbKey").textContent=cue.key+" "+cue.opens.replace(/^./,m=>"That opens "+m.toLowerCase()).replace(/\.$/,".");
+  const v=d.timeout?["less","Too slow this time."]:d.r==="best"?["best","Great read!"]:d.r==="good"?["good","Good read!"]:["less","Nice try!"];
+  $("#dbVerdict").className="verdict "+v[0];$("#dbVerdict").textContent=v[1];
+  let note="";const last=DBI===ds.length-1;if(d.timeout)note="Pick a little faster next time.";else if(last&&d.r!=="less"&&REP.result==="save")note="Good reads get saved sometimes. Keep making them.";else if(last&&d.r==="less"&&REP.result==="goal")note="It went in, but the best play works more often.";else if(d.r==="less")note="Here's the best play for this goalie.";
+  $("#dbNote").textContent=note;$("#dbKid").textContent=cue.kid;$("#dbBest").textContent=cue.tip;
+  const ids=Object.keys(d.rates).sort((a,b)=>RANK[d.rates[a][0]]-RANK[d.rates[b][0]]),why=$("#dbWhy"),tiles=$("#dbTiles");tiles.innerHTML="";
+  const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=d.rates[id][1]};
+  let first=null;ids.forEach(id=>{const r=d.rates[id][0],b=document.createElement("button");b.className="ptile "+r;b.dataset.id=id;b.setAttribute("aria-pressed","false");b.innerHTML=`<i class="dot ${r}"></i><span></span>${id===d.choice?'<em class="you">YOU</em>':""}`;b.querySelector("span").textContent=label(id,d.ctx);b.onclick=()=>{stopNarration();pickTile(id,b)};tiles.appendChild(b);if(!first&&r==="best")first=[id,b]});
+  if(first&&DB.coachAuto===false)pickTile(first[0],first[1]);else why.textContent="";
+  $("#dbKey").textContent=cue.key+" "+cue.opens.replace(/^./,m=>"That opens "+m.toLowerCase());
   const hn=handNote(d.ctx);$("#dbHandBox").hidden=!hn;$("#dbHand").textContent=hn;
-  renderOptList($("#dbOpts"),d.rates,d.ctx,d.choice,null);drawSnapshot($("#dbViews"),d.snap,viewMode,$("#dbCap"));
-  $("#dbNext").textContent=ROUND.i>=ROUND.count?"See round summary":"Next rep";$("#debrief").scrollTop=0}
-$("#dbSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#dbSeg"),viewMode);const d=REP.decisions[DBI];drawSnapshot($("#dbViews"),d.snap,viewMode,$("#dbCap"))};
-$("#dbReplay").onclick=()=>{const d=REP.decisions[DBI];$("#debrief").hidden=true;if(d.snap.kind==="top"){const t=d.topReplay;ST={mode:"topAnim",t:0,cx:t.cx,variant:t.variant,entry:t.entry,replay:{idx:DBI},top:{}};$("#prompt").hidden=false;$("#prompt").textContent="Watch the goalie";startLoop();return}
+  renderOptList($("#dbOpts"),d.rates,d.ctx,d.choice,null);d.marks={best:ids.filter(k=>d.rates[k][0]==="best"),chosen:d.choice};stopNarration();$("#dbViews")._onReady=()=>{if(DB.coachAuto!==false)setTimeout(()=>{if(!$("#debrief").hidden&&REP.decisions[DBI]===d)runNarration(d)},350)};drawSnapshot($("#dbViews"),d.snap,viewMode,$("#dbCap"),d.marks);
+  $("#dbNext").textContent=ROUND.i>=ROUND.count?"See round summary":"Next rep";$("#debrief").scrollTop=0;$("#debrief details").open=false}
+$("#dbSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;stopNarration();viewMode=b.dataset.v;setSeg($("#dbSeg"),viewMode);const d=REP.decisions[DBI];drawSnapshot($("#dbViews"),d.snap,viewMode,$("#dbCap"),d.marks)};
+$("#dbCoach").onclick=()=>{if(NARR)stopNarration();else runNarration(REP.decisions[DBI])};
+$("#dbReplay").onclick=()=>{stopNarration();const d=REP.decisions[DBI];$("#debrief").hidden=true;if(d.snap.kind==="top"){const t=d.topReplay;ST={mode:"topAnim",t:0,cx:t.cx,variant:t.variant,entry:t.entry,replay:{idx:DBI},top:{}};$("#prompt").hidden=false;$("#prompt").textContent="Watch the goalie";startLoop();return}
   startApproach({...d.ap,dur:d.ap.dur*1.8},{idx:DBI})};
-$("#dbNext").onclick=()=>{recordRep();$("#debrief").hidden=true;nextRep()};
-$("#endRound").onclick=()=>{if(REP&&REP.decisions.length&&!REP.recorded)recordRep();showSummary()};
+$("#dbNext").onclick=()=>{stopNarration();recordRep();$("#debrief").hidden=true;nextRep()};
+$("#endRound").onclick=()=>{stopNarration();if(REP&&REP.decisions.length&&!REP.recorded)recordRep();showSummary()};
 function recordRep(){if(REP.recorded)return;REP.recorded=true;REP.decisions.forEach(d=>{const s=PR.stats[d.cueId]||(PR.stats[d.cueId]={best:0,good:0,less:0,ms:0,n:0});s[d.r]++;if(ROUND.mode==="game"&&!d.timeout){s.ms+=d.ms;s.n++}ROUND.results.push(d)});save()}
 
 /* ---------- summary, progress, settings ---------- */
@@ -911,6 +999,10 @@ $("#setResetYes").onclick=()=>{PR.learned={};PR.stats={};save();$("#setConfirm")
 /* ---------- offline support when installed from a website ---------- */
 try{if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)&&!/claude|anthropic|usercontent/.test(location.hostname))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 $("#demoBtn").onclick=()=>{const learned={};CUES.forEach(c=>learned[c.id]=true);PR={id:"demo",name:"Demo",shoots:"L",goalieAge:11,eye:3.8,pause:false,learned,stats:{}};startRound("learn",null,["drop","seal","legs","hug","gloveLow","early"])};
+$("#appSetBtn").onclick=()=>{$("#voiceToggle").checked=DB.voice!==false;$("#autoToggle").checked=DB.coachAuto!==false;$("#resetAllConfirm").hidden=true;$("#resetAllMsg").textContent="";show("appset")};
+$("#voiceToggle").onchange=e=>{DB.voice=e.target.checked;save()};$("#autoToggle").onchange=e=>{DB.coachAuto=e.target.checked;save()};
+$("#resetAll").onclick=()=>{$("#resetAllConfirm").hidden=false};$("#resetAllNo").onclick=()=>{$("#resetAllConfirm").hidden=true};
+$("#resetAllYes").onclick=()=>{DB.profiles.forEach(p=>{p.learned={};p.stats={}});save();$("#resetAllConfirm").hidden=true;$("#resetAllMsg").textContent="Lesson history cleared for every player."};
 renderHome();
 </script>
 
