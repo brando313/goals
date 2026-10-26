@@ -69,7 +69,12 @@ p{margin:0;line-height:1.5}
 .lcard .t{font-family:var(--display);font-size:21px;font-weight:700;padding-right:30px}
 .lcard .z{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .lcard .tip{color:var(--open);font-weight:600}
-.lcard .check{position:absolute;top:14px;right:14px;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:14px}
+.lcard .check{position:absolute;top:14px;right:14px;z-index:2;background:rgba(12,20,36,.6);width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:14px}
+.lcard{overflow:hidden;min-height:150px}
+.lcard>span:not(.thumb):not(.check){position:relative;z-index:1;max-width:64%}
+.lcard .thumb{position:absolute;top:0;right:0;bottom:0;width:48%;z-index:0;pointer-events:none}
+.lcard .thumb img{width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:.7;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 45%);mask-image:linear-gradient(to right,transparent 0%,#000 45%)}
+.lcard .t,.lcard .tip,.lcard .z{text-shadow:0 1px 6px rgba(8,12,24,.9)}
 .lcard.done .check{background:var(--open);border-color:var(--open);color:#08311c}
 /* lesson + debrief shared */
 .split{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
@@ -714,8 +719,15 @@ $("#pauseToggle").onchange=e=>{PR.pause=e.target.checked;save()};
 $("#tLearn").onclick=()=>openLearn();$("#tPlayLearn").onclick=()=>startRound("learn");$("#tPlayGame").onclick=()=>startRound("game");
 $("#tProgress").onclick=()=>openProgress();$("#tSettings").onclick=()=>openSettings();
 
+const THUMBS={};let thumbQ=[],thumbBusy=false;
+function queueThumb(cue,img){const key=cue.id+"|"+PR.goalieAge+"|"+PR.shoots;if(THUMBS[key]){img.src=THUMBS[key];return}thumbQ.push([cue,img,key]);if(!thumbBusy)runThumbs()}
+function runThumbs(){const job=thumbQ.shift();if(!job){thumbBusy=false;return}thumbBusy=true;setTimeout(()=>{try{const [cue,img,key]=job;if(!THUMBS[key])THUMBS[key]=makeThumb(cue);img.src=THUMBS[key]}catch(e){}runThumbs()},16)}
+function makeThumb(cue){const W=300,H=340,cv=document.createElement("canvas");cv.width=W;cv.height=H;const ctx=cv.getContext("2d");const snap=lessonSnap(cue);
+  if(snap.kind==="top"){renderTop(ctx,W,H,snap.top)}
+  else{const G=snap.G,d=n2([snap.P[0]-G[0],snap.P[1]-G[1]]);renderView(ctx,W,H,{eye:[G[0]+d[0]*6.2,G[1]+d[1]*6.2,2.6],tgt:[G[0],G[1],1.9],G,fg:snap.fg,parts:snap.parts})}
+  return cv.toDataURL("image/jpeg",.82)}
 function openLearn(){const el=$("#lessonList");el.innerHTML="";CUES.forEach(cue=>{const b=document.createElement("button");b.className="lcard"+(PR.learned[cue.id]?" done":"");
-  b.innerHTML=`<span class="check">${PR.learned[cue.id]?"&#10003;":""}</span><span class="z"></span><span class="t"></span><span class="tip"></span>`;
+  b.innerHTML=`<span class="thumb"><img alt=""></span><span class="check">${PR.learned[cue.id]?"&#10003;":""}</span><span class="z"></span><span class="t"></span><span class="tip"></span>`;queueThumb(cue,b.querySelector(".thumb img"));
   b.querySelector(".z").textContent=cue.top?ZONES.behind:cue.zones.length?cue.zones.map(z=>ZONES[z].replace("From ","")).join(", ").replace(/^./,m=>"From "+m):ZONES.phase3;
   b.querySelector(".t").textContent=cue.name;b.querySelector(".tip").textContent=cue.tip;b.onclick=()=>openLesson(cue.id);el.appendChild(b)});show("learn")}
 
