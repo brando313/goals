@@ -366,7 +366,7 @@ function lerpPose(A,B,t){const o={};for(const k in A){o[k]=A[k].map((v,i)=>v+(B[
 /* ---------- geometry of the rink and the shooter ---------- */
 // World: x = shooter's right when facing the net from the front, y = 0 at the goal line (front of the net is y<0), z = up. Net mouth 6 ft wide by 4 ft tall.
 function stdPos(P,depth){const d=n2([P[0],P[1]]);let g=[d[0]*depth,d[1]*depth];if(g[1]>-.7)g[1]=-.7;g[0]=clamp(g[0],-2.6,2.6);return g}
-function bladeOf(P,shoots){const f=n2([-P[0],-P[1]]),r=[f[1],-f[0]],h=shoots==="L"?-1:1;return[P[0]+r[0]*h*1.1+f[0]*3,P[1]+r[1]*h*1.1+f[1]*3,.2]}
+function bladeOf(P,shoots){const f=n2([-P[0],-P[1]]),r=[f[1],-f[0]],h=shoots==="L"?-1:1;return[P[0]+r[0]*h*1.75+f[0]*2.8,P[1]+r[1]*h*1.75+f[1]*2.8,.2]}
 const GX=30,GZ=20;
 function openStats(g){let lo=0,hi=0,n=GX*GZ/2;for(let j=0;j<GZ;j++)for(let i=0;i<GX;i++){if(g[j*GX+i]){if(j<GZ/2)lo++;else hi++}}return{lo:lo/n,hi:hi/n,all:(lo+hi)/(2*n)}}
 
@@ -459,7 +459,7 @@ function build3D(){
   let envTex=null;try{const pm=new THREE.PMREMGenerator(renderer);envTex=pm.fromScene(scene,.04).texture}catch(e){}
   const goalie=buildGoalie(envTex);scene.add(goalie.group);
   // the player's own stick, drawn in first person
-  const vm=buildPlayerStick();vm.group.traverse(o=>{if(o.isMesh&&o!==vm.shadow)o.castShadow=true});scene.add(vm.group);
+  const vm=buildPlayerStick();vm.all.forEach(o=>scene.add(o));
   return{renderer,scene,camera,shade,dtex,data,puck,goalie,vm}
 }
 const REF={pants:[.7,.3],body:[.78,.5],head:[.32,.32],glove:[.38,.38],blocker:[.24,.42]};
@@ -545,30 +545,31 @@ function poseGoalie(go,G,fg,parts){
   const kd=bl.clone().sub(P1).normalize();placeSeg(go.knob,bl,bl.clone().addScaledVector(kd,.3),1,1);
 }
 
-const PK=[.12,.19,.042];
 function buildPlayerStick(){
-  const group=new THREE.Group();
-  const prof=new THREE.Shape();prof.moveTo(-.4,.02);prof.quadraticCurveTo(-.4,0,-.35,0);prof.lineTo(.36,0);prof.quadraticCurveTo(.47,0,.47,.08);prof.quadraticCurveTo(.47,.165,.36,.17);prof.lineTo(-.28,.155);prof.quadraticCurveTo(-.37,.155,-.4,.11);prof.closePath();
-  const bg=new THREE.ExtrudeGeometry(prof,{depth:.026,bevelEnabled:true,bevelThickness:.005,bevelSize:.005,bevelSegments:2,curveSegments:12});remapUV(bg);bg.translate(0,0,-.013);bg.rotateX(Math.PI/2);
-  const bp=bg.attributes.position;for(let i=0;i<bp.count;i++){const t=clamp((bp.getX(i)+.4)/.87,0,1);bp.setY(i,bp.getY(i)+.085*t*t)}bp.needsUpdate=true;bg.computeVertexNormals();
-  const blade=new THREE.Mesh(bg,std({map:tapeTex(),roughness:.75}));group.add(blade);
+  // blade profile in its own frame: x runs heel (0) to toe, y is height; the toe curls toward the forehand face
+  const group=new THREE.Group(),prof=new THREE.Shape();
+  prof.moveTo(.06,0);prof.lineTo(.72,0);prof.quadraticCurveTo(.83,0,.83,.08);prof.quadraticCurveTo(.83,.168,.72,.172);prof.lineTo(.06,.15);prof.quadraticCurveTo(0,.15,0,.1);prof.lineTo(0,.05);prof.quadraticCurveTo(0,0,.06,0);
+  const bg=new THREE.ExtrudeGeometry(prof,{depth:.022,bevelEnabled:true,bevelThickness:.004,bevelSize:.004,bevelSegments:2,curveSegments:12});remapUV(bg);bg.translate(0,0,-.011);bg.rotateX(Math.PI/2);
+  const bp=bg.attributes.position;for(let i=0;i<bp.count;i++){const t=clamp(bp.getX(i)/.83,0,1);bp.setY(i,bp.getY(i)+.06*t*t)}bp.needsUpdate=true;bg.computeVertexNormals();
+  const blade=new THREE.Mesh(bg,std({map:tapeTex(),roughness:.75}));blade.castShadow=true;group.add(blade);
   const sg=new THREE.ExtrudeGeometry(rrShape(1,.72,.3),{depth:1,bevelEnabled:false,curveSegments:4});sg.translate(0,0,-.5);sg.rotateX(-Math.PI/2);sg.computeVertexNormals();
-  const shaft=new THREE.Mesh(sg,std({color:"#141416",roughness:.45,metalness:.1}));group.add(shaft);
-  const hosel=new THREE.Mesh(sg,std({color:"#141416",roughness:.45}));hosel.visible=false;group.add(hosel);
-  const stripe=new THREE.Mesh(sg,std({color:"#e9e9e6",roughness:.5}));group.add(stripe);
-  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;puck.position.set(PK[0],PK[1],PK[2]);group.add(puck);
-  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({color:"#000",transparent:true,opacity:.12,depthWrite:false}));shadow.visible=false;group.add(shadow);
-  return{group,blade,shaft,hosel,stripe,puck,shadow}
+  const shaft=new THREE.Mesh(sg,std({color:"#141416",roughness:.45,metalness:.1})),stripe=new THREE.Mesh(sg,std({color:"#e9e9e6",roughness:.5}));
+  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;
+  [shaft,stripe,puck].forEach(m=>m.castShadow=true);
+  return{group,blade,shaft,stripe,puck,all:[group,shaft,stripe,puck]}
 }
 function poseStick(vm,P,hand){
-  const h=hand==="L"?-1:1,f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sx=-h;
-  const f=new THREE.Vector3(f2[0],f2[1],0),r=new THREE.Vector3(r2[0],r2[1],0),up=new THREE.Vector3(0,0,1);
-  vm.group.scale.x=sx;vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(r,f,up));
-  const pk=bladeOf(P,hand),off=r.clone().multiplyScalar(PK[0]*sx).addScaledVector(f,PK[1]);vm.group.position.set(pk[0]-off.x,pk[1]-off.y,0);
-  const hw=new THREE.Vector3(P[0],P[1],2.6).addScaledVector(r,h*.55).addScaledVector(f,.5),d=hw.clone().sub(vm.group.position),hl=new THREE.Vector3(d.dot(r)*sx,d.dot(f),d.z);
-  const heel=new THREE.Vector3(-.39,.005,.03),dir=hl.clone().sub(heel).normalize();placeSeg(vm.shaft,heel,hl,.062,.06);
-  placeSeg(vm.stripe,heel.clone().addScaledVector(dir,1.05),heel.clone().addScaledVector(dir,1.25),.066,.064)}
-function eyeTgt(eye){const f=n2([-eye[0],-eye[1]]),d=10;return[eye[0]+f[0]*d,eye[1]+f[1]*d,eye[2]-d*Math.tan(27*Math.PI/180)]}
+  // a real stick: the shaft and blade lie in one upright plane, the blade runs on from the heel in the line of the shaft,
+  // and the forehand face cups the puck from behind
+  const h=hand==="L"?-1:1,f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],pk=bladeOf(P,hand);
+  const Hd=[P[0]-r2[0]*h*.3+f2[0]*1.05,P[1]-r2[1]*h*.3+f2[1]*1.05];
+  const u=n2([pk[0]-Hd[0],pk[1]-Hd[1]]),lp=[-u[1],u[0]],s=(lp[0]*f2[0]+lp[1]*f2[1])>0?1:-1,n=[lp[0]*s,lp[1]*s];
+  const heel=[pk[0]-u[0]*.42-n[0]*.17,pk[1]-u[1]*.42-n[1]*.17];
+  vm.group.position.set(heel[0],heel[1],0);vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(u[0],u[1],0),new THREE.Vector3(lp[0],lp[1],0),new THREE.Vector3(0,0,1)));vm.group.scale.set(1,s,1);
+  vm.puck.position.set(pk[0],pk[1],.042);
+  const A=new THREE.Vector3(heel[0]+u[0]*.03,heel[1]+u[1]*.03,.1),dir=new THREE.Vector3(Hd[0],Hd[1],2.0).sub(A).normalize(),Hh=A.clone().addScaledVector(dir,4.1);
+  placeSeg(vm.shaft,A,Hh,.07,.055);placeSeg(vm.stripe,A.clone().addScaledVector(dir,1.0),A.clone().addScaledVector(dir,1.2),.074,.059)}
+function eyeTgt(eye){const f=n2([-eye[0],-eye[1]]),d=10;return[eye[0]+f[0]*d,eye[1]+f[1]*d,eye[2]-d*Math.tan(29*Math.PI/180)]}
 function setCamera(T,eye,tgt,W,H){tgt=tgt||eyeTgt(eye);const F=Math.min(H/(2*Math.tan(31*Math.PI/180)),W*1.2);T.camera.fov=2*Math.atan(H/2/F)*180/Math.PI;T.camera.aspect=W/H;T.camera.position.set(eye[0],eye[1],eye[2]);T.camera.lookAt(tgt[0],tgt[1],tgt[2]);T.camera.updateProjectionMatrix();T.camera.updateMatrixWorld()}
 function openGrid3(O){const T=three();T.goalie.group.updateMatrixWorld(true);const rc=new THREE.Raycaster(),o=new THREE.Vector3(...O),g=new Array(GX*GZ),targets=[];T.goalie.group.traverse(m=>{if(m.isMesh)targets.push(m)});
   for(let j=0;j<GZ;j++)for(let i=0;i<GX;i++){const p=new THREE.Vector3(-3+6*(i+.5)/GX,.02,4*(j+.5)/GZ),d=p.clone().sub(o),dist=d.length();rc.set(o,d.normalize());rc.far=dist-.05;g[j*GX+i]=rc.intersectObjects(targets,false).length===0}return g}
@@ -577,7 +578,7 @@ function renderView(ctx2d,W,H,v){
   if(v.parts)poseGoalie(T.goalie,v.G,v.fg,v.parts);T.goalie.group.visible=!!v.parts;
   if(v.shadeFrom&&v.parts){const grid=openGrid3(v.shadeFrom);for(let k=0;k<GX*GZ;k++){const o=grid[k];T.data.set(o?[40,225,110,175]:[0,0,0,0],k*4)}T.dtex.needsUpdate=true;T.shade.visible=true}else T.shade.visible=false;
   if(v.puck){T.puck.visible=true;T.puck.position.set(...v.puck)}else T.puck.visible=false;
-  if(v.stick){poseStick(T.vm,[v.eye[0],v.eye[1]],v.hand);T.vm.group.visible=true;T.vm.puck.visible=v.stickPuck!==false}else T.vm.group.visible=false;
+  if(v.stick){poseStick(T.vm,v.stickEye||[v.eye[0],v.eye[1]],v.hand);T.vm.all.forEach(o=>o.visible=true);T.vm.puck.visible=v.stickPuck!==false}else T.vm.all.forEach(o=>o.visible=false);
   T.renderer.clear();T.renderer.render(T.scene,T.camera);
   ctx2d.drawImage(T.renderer.domElement,0,0,W,H);
   if(v.flash){ctx2d.fillStyle=`rgba(224,56,62,${.35*v.flash})`;ctx2d.fillRect(0,0,W,H)}
