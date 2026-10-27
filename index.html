@@ -845,7 +845,7 @@ function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.
   const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=d.rates[id][1]};
   ids.forEach(id=>{const r=d.rates[id][0],b=document.createElement("button");b.className="ptile "+r;b.dataset.id=id;b.setAttribute("aria-pressed","false");b.innerHTML=`<i class="dot ${r}"></i><span></span>${id===d.choice?'<em class="you">YOU</em>':""}`;b.querySelector("span").textContent=label(id);b.onclick=()=>{stopVoice();clearLit();pickTile(id,b)};tiles.appendChild(b)});
   const bestList=ids.filter(k=>d.rates[k][0]==="best");d.marks={best:bestList,chosen:d.choice};why.textContent=d.choice?d.rates[d.choice][1]:"Pick a play before the goalie gets set.";
-  viewMode="eyes";setSeg($("#dbSeg"),viewMode);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"See my stars":"Next rep";$("#debrief").scrollTop=0;
+  viewMode="eyes";setSeg($("#dbSeg"),viewMode);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"Next":"Next rep";$("#debrief").scrollTop=0;
   if(DB.coachAuto!==false)setTimeout(()=>{if(!$("#debrief").hidden)coachTalk(d)},300)}
 function drawDebriefView(d){const cvd=$("#dbCv"),{W,H}=sizeCanvas(cvd),g2=cvd.getContext("2d"),s=d.snap,eye=[s.P[0],s.P[1],PR.eye],blade=bladeOf(s.P,s.hand),fromBlade=viewMode==="blade";
   renderView(g2,W,H,{eye:fromBlade?blade:eye,tgt:fromBlade?[0,.4,1.0]:null,G:s.G,fg:s.fg,pose:s.pose,k:s.c.k,look:eye,stick:!fromBlade,hand:s.hand,shadeFrom:fromBlade?blade:eye});
