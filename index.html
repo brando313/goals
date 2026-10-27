@@ -133,6 +133,12 @@ p{margin:0;line-height:1.5}
 .ptile.lit{outline:3px solid #ffcf3a;outline-offset:1px;animation:litpulse 1s ease-in-out infinite}
 .why{font-size:19px;line-height:1.4;min-height:54px;background:var(--panel2);border-radius:12px;padding:12px 14px}
 .parents summary{cursor:pointer;color:var(--muted);font-weight:600;padding:8px 0}
+.rounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.rcard{text-align:left;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-height:92px}
+.rcard.now{border-color:var(--amber)}.rcard.next{border-color:var(--open)}
+.rcard .n{font-family:var(--display);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.rcard .t{font-family:var(--display);font-size:20px;font-weight:700;line-height:1.1}
+.rcard .s{color:var(--gold);font-size:18px;letter-spacing:2px}
 .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .stat{background:var(--panel);border-radius:14px;padding:14px;border:1px solid var(--line)}
 .stat .n{font-family:var(--display);font-size:44px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -167,7 +173,7 @@ p{margin:0;line-height:1.5}
     <h1 id="menuTitle"></h1>
     <div class="tiles">
       <button class="tile hot" id="tLearn"><span class="t">Learn the reads</span><span class="muted" id="tLearnSub"></span></button>
-      <button class="tile" id="tPlay"><span class="t">Play a round</span><span class="muted">Six reps. Read the goalie, pick your play.</span></button>
+      <button class="tile" id="tPlay"><span class="t">Play the rounds</span><span class="muted">Seven rounds, one read each. Then a mixed round.</span></button>
       <button class="tile" id="tProgress"><span class="t">My stars</span><span class="muted">See which reads are getting strong.</span></button>
       <button class="tile" id="tSettings"><span class="t">Settings</span><span class="muted">Shooting hand and goalie size.</span></button>
     </div>
@@ -250,8 +256,8 @@ p{margin:0;line-height:1.5}
     <div class="stars" id="sumStars"></div>
     <div class="statgrid" id="sumStats"></div>
     <div class="card"><h3>Reads you're getting strong at</h3><div class="row" id="sumGood" style="margin-top:10px"></div></div>
-    <div class="card" id="sumFocusCard"><h3>Practice this read next</h3><p id="sumFocus" style="margin:8px 0 12px;font-size:18px"></p><button class="btn" id="sumFocusBtn">Open the lesson</button></div>
-    <div class="row"><button class="btn primary big" id="sumAgain">Next round</button><button class="btn" data-go="menu">Back to menu</button></div>
+    <div class="row"><button class="btn primary big" id="sumAgain">Next round</button><button class="btn" id="sumRetry">Play this round again</button><button class="btn" data-go="menu">Back to menu</button></div>
+    <div class="card"><h3>All seven rounds</h3><p class="muted" style="margin:4px 0 12px">Tap any round to play it. Each round is 3 reps of one read.</p><div class="rounds" id="sumRounds"></div></div>
   </div>
 </div>
 
@@ -712,10 +718,10 @@ function renderHome(){const el=$("#playerList");el.innerHTML="";DB.profiles.forE
   m[1].textContent=`${LESSONS.filter(l=>p.learned[l.id]).length} of ${LESSONS.length} reads learned`;b.onclick=()=>{PR=p;openMenu()};el.appendChild(b)});show("home")}
 function learnedCount(){return LESSONS.filter(l=>PR.learned[l.id]).length}
 function openMenu(){if(!PR)return renderHome();$("#menuTitle").textContent=`${PR.name}'s goalie reads`;$("#menuSub").textContent=`Shoots ${PR.shoots==="L"?"left":"right"}. Goalies age ${PR.goalieAge}.`;
-  const n=learnedCount();$("#tLearnSub").textContent=n?`${n} of ${LESSONS.length} learned.`:"Start here.";$("#tPlay").disabled=n<2;$("#playNote").textContent=n<2?"Learn at least 2 reads to play a round.":"";
+  const n=learnedCount();$("#tLearnSub").textContent=n?`${n} of ${LESSONS.length} learned.`:"Start here.";$("#tPlay").disabled=false;$("#playNote").textContent="";
   $("#clockToggle").checked=!!PR.clock;show("menu")}
 $("#clockToggle").onchange=e=>{PR.clock=e.target.checked;save()};
-$("#tLearn").onclick=()=>openLearn();$("#tPlay").onclick=()=>startRound(null);$("#tProgress").onclick=()=>openProgress();$("#tSettings").onclick=()=>openSettings();
+$("#tLearn").onclick=()=>openLearn();$("#tPlay").onclick=()=>{const nx=LESSONS.find(l=>!PR.learned[l.id]);startRound(nx?nx.id:LESSONS[0].id)};$("#tProgress").onclick=()=>openProgress();$("#tSettings").onclick=()=>openSettings();
 
 /* ---- learn list with goalie pictures ---- */
 const THUMBS={};let thumbQ=[],thumbBusy=false;
@@ -757,7 +763,7 @@ addEventListener("resize",()=>{resize();if(ST&&ST.mode==="decide")placeTargets()
 let ROUND=null,REP=null,ST=null,raf=0,last=0,wake=null;
 function releaseWake(){try{wake&&wake.release();wake=null}catch(e){}}
 function pool(){return LESSONS.filter(l=>PR.learned[l.id])}
-function startRound(only,seq){const p=only?[LESSON[only]]:pool();if(!p.length&&!seq)return;ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?3:6,results:[],last:null};
+function startRound(only,seq){const p=only?[LESSON[only]]:pool();if(!p.length&&!seq)return;if(only){PR.learned[only]=true;save()}ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?3:6,results:[],last:null};
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
   show("game");resize();$("#hudName").textContent=PR.name;nextRep()}
 function weightOf(id){const s=PR.stats[id]||{best:0,good:0,less:0};return Math.max(.4,1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2))}
@@ -857,15 +863,20 @@ function coachTalk(d){stopVoice();const les=LESSON[d.les],s=d.snap,best=d.marks.
     const st=steps[i++];clearLit();(st.tiles||[]).forEach(id=>{const t=document.querySelector(`.ptile[data-id="${id}"]`);if(t)t.classList.add("lit")});$("#dbWhy").textContent=st.text;DBV={ring:st.ring||null};drawDebriefView(d);speak(st.text,()=>{VOICE.timer=setTimeout(next,450)})};next()}
 
 /* ================= summary, stars, settings ================= */
-function showSummary(){stopLoop();ST=null;const rs=ROUND?ROUND.results:[],cnt={best:0,good:0,less:0};rs.forEach(d=>cnt[d.r]++);
-  $("#sumTitle").textContent=rs.length?`${PR.name} earned ${cnt.best} ${cnt.best===1?"star":"stars"}`:"No reps played";$("#sumStars").textContent="★".repeat(cnt.best)+"☆".repeat(Math.max(0,rs.length-cnt.best));
+function roundIndex(){return ROUND&&ROUND.only?LESSONS.findIndex(l=>l.id===ROUND.only):-1}
+function showSummary(){stopLoop();ST=null;if(REP&&REP.decisions.length&&!REP.recorded)recordRep();const rs=ROUND?ROUND.results:[],cnt={best:0,good:0,less:0};rs.forEach(d=>cnt[d.r]++);const ri=roundIndex(),cur=ri>=0?LESSONS[ri]:null;
+  document.querySelector("#summary .eyebrow").textContent=cur?`Round ${ri+1} of ${LESSONS.length} complete: ${cur.title}`:"Mixed round complete";
+  $("#sumTitle").textContent=rs.length?`${PR.name} earned ${cnt.best} ${cnt.best===1?"star":"stars"}`:"No reps finished yet";$("#sumStars").textContent="★".repeat(cnt.best)+"☆".repeat(Math.max(0,rs.length-cnt.best));
   const st=$("#sumStats");st.innerHTML="";[["Best reads",cnt.best,"var(--best-fg)"],["Good reads",cnt.good,"var(--good-fg)"],["Not this time",cnt.less,"var(--amber)"]].forEach(([l,n,cl])=>{const d=document.createElement("div");d.className="stat";d.innerHTML=`<div class="n" style="color:${cl}">${n}</div><div class="muted">${l}</div>`;st.appendChild(d)});
   const by={};rs.forEach(d=>{const b=by[d.les]||(by[d.les]={ok:0,less:0});d.r==="less"?b.less++:b.ok++});
   const good=$("#sumGood");good.innerHTML="";const gl=Object.keys(by).filter(k=>by[k].ok>0&&by[k].ok>=by[k].less);
   if(gl.length)gl.forEach(k=>{const s=document.createElement("span");s.className="chip best";s.textContent=LESSON[k].rule;good.appendChild(s)});else good.innerHTML='<p class="muted">Keep going. Every rep builds the habit of looking at the goalie first.</p>';
-  const focus=Object.keys(by).filter(k=>by[k].less>0).sort((a,b)=>by[b].less-by[a].less)[0];$("#sumFocusCard").hidden=!focus;
-  if(focus){$("#sumFocus").textContent=`${LESSON[focus].title}. ${LESSON[focus].rule}`;$("#sumFocusBtn").onclick=()=>openLesson(focus)}
-  $("#sumAgain").onclick=()=>startRound(ROUND?ROUND.only:null,ROUND&&ROUND.seq);show("summary")}
+  const nextLes=ri>=0&&ri<LESSONS.length-1?LESSONS[ri+1]:null;$("#sumAgain").textContent=nextLes?`Next round: ${nextLes.title}`:(cur?"Mixed round: all seven reads":"Mixed round again");
+  $("#sumAgain").onclick=()=>nextLes?startRound(nextLes.id):startRound(null,ROUND&&ROUND.seq);$("#sumRetry").hidden=!cur;$("#sumRetry").onclick=()=>startRound(cur.id);
+  const grid=$("#sumRounds");grid.innerHTML="";LESSONS.forEach((l,i)=>{const st=PR.stats[l.id]||{best:0},b=document.createElement("button");b.className="rcard"+(cur&&l.id===cur.id?" now":nextLes&&l.id===nextLes.id?" next":"");
+    b.innerHTML=`<span class="n">Round ${i+1}${cur&&l.id===cur.id?" (just played)":nextLes&&l.id===nextLes.id?" (next)":""}</span><span class="t"></span><span class="s"></span>`;b.querySelector(".t").textContent=l.title;b.querySelector(".s").textContent=st.best?"★".repeat(Math.min(5,st.best))+(st.best>5?" +"+(st.best-5):""):"no stars yet";b.onclick=()=>startRound(l.id);grid.appendChild(b)});
+  const mix=document.createElement("button");mix.className="rcard";mix.innerHTML='<span class="n">Round 8</span><span class="t">Mixed round: all seven reads</span><span class="s muted" style="color:var(--muted);letter-spacing:0;font-size:14px">Six reps, any read</span>';mix.onclick=()=>startRound(null);grid.appendChild(mix);
+  show("summary")}
 function openProgress(){$("#progTitle").textContent=`${PR.name}'s stars`;const el=$("#progList");el.innerHTML="";
   LESSONS.forEach(les=>{const s=PR.stats[les.id]||{best:0,good:0,less:0},n=s.best+s.good+s.less,row=document.createElement("div");row.className="prow";
     row.innerHTML=`<div><b></b><div class="muted" style="font-size:14px"></div></div><div class="bar"></div><div class="muted" style="font-variant-numeric:tabular-nums">${s.best} ★</div>`;
