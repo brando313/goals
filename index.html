@@ -698,7 +698,7 @@ function drawRoute(g,W,H,plan,color,opt){opt=opt||{};const pts=plan.route.map(p=
   const a=pts[pts.length-1],tp=projCam(W,H,plan.T);if(tp){g.setLineDash([lw*1.4,lw*1.2]);g.strokeStyle="rgba(0,0,0,.45)";g.lineWidth=lw*.7+3;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(tp[0],tp[1]);g.stroke();g.strokeStyle=color;g.lineWidth=lw*.7;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(tp[0],tp[1]);g.stroke();g.setLineDash([]);g.fillStyle=color;g.strokeStyle="#fff";g.lineWidth=2;g.beginPath();g.arc(tp[0],tp[1],lw*1.3,0,Math.PI*2);g.fill();g.stroke()}
   if(plan.fakeAt){const fp=projCam(W,H,[plan.fakeAt[0],plan.fakeAt[1],.03]);if(fp){g.fillStyle="#fff";g.strokeStyle=color;g.lineWidth=3;g.beginPath();for(let i=0;i<16;i++){const an=i*Math.PI/8,rr=i%2?lw*1.2:lw*2.6;g.lineTo(fp[0]+Math.cos(an)*rr,fp[1]+Math.sin(an)*rr)}g.closePath();g.fill();g.stroke()}}
   g.restore();return pts}
-function targetWorld(id,G){if(id==="fh")return[clamp(G[0],-1.5,1.5),.05,.5];const t=TGT[id];return t?[t[0],.05,t[1]]:null}
+function targetWorld(id,G){if(id==="fh")return[G[0],G[1]+.55,.3];const t=TGT[id];return t?[t[0],.05,t[1]]:null}
 function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.03);
   const star=(x,y,R)=>{g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}g.closePath();g.fillStyle="#ffd34d";g.fill();g.lineWidth=2;g.strokeStyle="#5a4300";g.stroke()};
   (marks.best||[]).filter(id=>ROUTES.includes(id)).forEach(id=>drawRoute(g,W,H,routePlan(id,snap.P,snap.hand,{...snap.c,G:snap.G}),"#45d483"));
@@ -805,7 +805,7 @@ function placeTargets(){const s=ST,tl=$("#tapLayer");tl.innerHTML="";const v=fra
   const pts=projectPts(v,W,H,SHOTS.map(id=>targetWorld(id,gs.G))).map(p=>p&&[p[0]/DPR,p[1]/DPR]);
   const P=pts.map(p=>p?[clamp(p[0],34,innerWidth-34),clamp(p[1],34,innerHeight-90)]:[innerWidth/2,innerHeight*.3]);
   let md=1e9;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++)md=Math.min(md,Math.hypot(P[i][0]-P[j][0],P[i][1]-P[j][1]));
-  const sz=clamp(md*.85,30,56);for(let it=0;it<30;it++)for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[j][0]-P[i][0],dy=P[j][1]-P[i][1],d=Math.hypot(dx,dy)||1,need=sz+4;if(d<need){const m=(need-d)/2,ux=dx/d,uy=dy/d;P[i][0]-=ux*m;P[i][1]-=uy*m;P[j][0]+=ux*m;P[j][1]+=uy*m}}
+  const sz=clamp(md*.85,30,56);for(let it=0;it<30;it++)for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const dx=P[j][0]-P[i][0],dy=P[j][1]-P[i][1],d=Math.hypot(dx,dy)||1,need=sz+4;if(d<need){const m=(need-d)/2,ux=dx/d,uy=dy/d,fi=SHOTS[i]==="fh",fj=SHOTS[j]==="fh";if(!fi){P[i][0]-=ux*m*(fj?2:1);P[i][1]-=uy*m*(fj?2:1)}if(!fj){P[j][0]+=ux*m*(fi?2:1);P[j][1]+=uy*m*(fi?2:1)}}}
   SHOTS.forEach((id,i)=>{const b=document.createElement("button");b.className="tgt"+(sz<46?" sm":"");b.style.left=P[i][0]+"px";b.style.top=P[i][1]+"px";b.style.width=b.style.height=sz+"px";b.setAttribute("aria-label",label(id));b.innerHTML="<span></span>";b.querySelector("span").textContent={h:"High",m:"Mid",l:"Low",f:"Five-hole"}[id[0]];b.onclick=()=>choose(id);tl.appendChild(b)});
   s.plans=les.routes.map(id=>routePlan(id,gs.P,PR.shoots,{...s.ap.ctx,G:gs.G}));setCamera(three(),v.eye,null,W,H);
   const chips=s.plans.map((pl,n)=>{const i=Math.round(pl.route.length*(.4+.1*n)),p=projCam(W,H,[pl.route[i][0],pl.route[i][1],.03]);return{id:pl.id,name:pl.name,color:pl.color,x:p?p[0]/DPR:innerWidth/2,y:p?p[1]/DPR:innerHeight*.6}});
@@ -818,7 +818,7 @@ function choose(id){const s=ST;if(s.mode!=="decide")return;const les=LESSON[s.ap
   REP.decisions.push({les:les.id,ctx:cx,snap:snapNow(),ap:s.ap,choice:id,rates,r,ms,timeout:!id});
   $("#tapLayer").innerHTML="";$("#timer").hidden=true;$("#prompt").hidden=true;const gs=goalieAt(s.ap,1),goal=id?Math.random()<chooseProb(r):false;REP.result=goal?"goal":"save";
   if(id&&ROUTES.includes(id)){const plan=routePlan(id,gs.P,PR.shoots,{...cx,G:gs.G});ST={mode:"deke",t:0,ap:s.ap,o:{plan,goal,G0:gs.G,pose0:gs.pose,down:id==="across"?POSE.butterfly:POSE.butterfly,d2:.45}};return}
-  const T=id?(id==="fh"?[clamp(gs.G[0],-1.5,1.5),.3,.5]:[TGT[id][0],.3,TGT[id][1]]):[gs.G[0],-.5,1.5];
+  const T=id?(id==="fh"?[gs.G[0],gs.G[1]+.9,.25]:[TGT[id][0],.3,TGT[id][1]]):[gs.G[0],-.5,1.5];
   const G1=goal?gs.G:l2(gs.G,[clamp(T[0]*.55,-2.2,2.2),gs.G[1]],.8),pose1=goal?gs.pose:savePose(id||"fh",cx,cx.k);
   ST={mode:"shot",t:0,ap:s.ap,o:{P:gs.P,from:bladeOf(gs.P,PR.shoots),T,goal,G0:gs.G,G1,pose0:gs.pose,pose1,d:.5}}}
 function banner(goal){const b=$("#banner");b.className=goal?"goal":"save";b.textContent=goal?"Goal!":"Save";b.hidden=false}
