@@ -763,7 +763,9 @@ addEventListener("resize",()=>{resize();if(ST&&ST.mode==="decide")placeTargets()
 let ROUND=null,REP=null,ST=null,raf=0,last=0,wake=null;
 function releaseWake(){try{wake&&wake.release();wake=null}catch(e){}}
 function pool(){return LESSONS.filter(l=>PR.learned[l.id])}
-function startRound(only,seq){const p=only?[LESSON[only]]:pool();if(!p.length&&!seq)return;if(only){PR.learned[only]=true;save()}ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?3:6,results:[],last:null};
+function mixedSeq(){const shots=["deep","drop","legs","lean"],moves=["out","set","post"];const pk=(a,n)=>a.slice().sort(()=>Math.random()-.5).slice(0,n);
+  let seq=pk(shots,3).concat(pk(moves,3));for(let t=0;t<20;t++){seq.sort(()=>Math.random()-.5);if(seq.every((x,i)=>!i||x!==seq[i-1]))break}return seq}
+function startRound(only,seq){if(!only&&!seq)seq=mixedSeq();const p=only?[LESSON[only]]:LESSONS;if(!p.length&&!seq)return;if(only){PR.learned[only]=true;save()}ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?3:6,results:[],last:null};
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
   show("game");resize();$("#hudName").textContent=PR.name;nextRep()}
 function weightOf(id){const s=PR.stats[id]||{best:0,good:0,less:0};return Math.max(.4,1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2))}
@@ -872,7 +874,7 @@ function showSummary(){stopLoop();ST=null;if(REP&&REP.decisions.length&&!REP.rec
   const good=$("#sumGood");good.innerHTML="";const gl=Object.keys(by).filter(k=>by[k].ok>0&&by[k].ok>=by[k].less);
   if(gl.length)gl.forEach(k=>{const s=document.createElement("span");s.className="chip best";s.textContent=LESSON[k].rule;good.appendChild(s)});else good.innerHTML='<p class="muted">Keep going. Every rep builds the habit of looking at the goalie first.</p>';
   const nextLes=ri>=0&&ri<LESSONS.length-1?LESSONS[ri+1]:null;$("#sumAgain").textContent=nextLes?`Next round: ${nextLes.title}`:(cur?"Mixed round: all seven reads":"Mixed round again");
-  $("#sumAgain").onclick=()=>nextLes?startRound(nextLes.id):startRound(null,ROUND&&ROUND.seq);$("#sumRetry").hidden=!cur;$("#sumRetry").onclick=()=>startRound(cur.id);
+  $("#sumAgain").onclick=()=>nextLes?startRound(nextLes.id):startRound(null);$("#sumRetry").hidden=!cur;$("#sumRetry").onclick=()=>startRound(cur.id);
   const grid=$("#sumRounds");grid.innerHTML="";LESSONS.forEach((l,i)=>{const st=PR.stats[l.id]||{best:0},b=document.createElement("button");b.className="rcard"+(cur&&l.id===cur.id?" now":nextLes&&l.id===nextLes.id?" next":"");
     b.innerHTML=`<span class="n">Round ${i+1}${cur&&l.id===cur.id?" (just played)":nextLes&&l.id===nextLes.id?" (next)":""}</span><span class="t"></span><span class="s"></span>`;b.querySelector(".t").textContent=l.title;b.querySelector(".s").textContent=st.best?"★".repeat(Math.min(5,st.best))+(st.best>5?" +"+(st.best-5):""):"no stars yet";b.onclick=()=>startRound(l.id);grid.appendChild(b)});
   const mix=document.createElement("button");mix.className="rcard";mix.innerHTML='<span class="n">Round 8</span><span class="t">Mixed round: all seven reads</span><span class="s muted" style="color:var(--muted);letter-spacing:0;font-size:14px">Six reps, any read</span>';mix.onclick=()=>startRound(null);grid.appendChild(mix);
@@ -892,7 +894,7 @@ $("#appSetBtn").onclick=()=>{$("#voiceToggle").checked=DB.voice!==false;$("#auto
 $("#voiceToggle").onchange=e=>{DB.voice=e.target.checked;save()};$("#autoToggle").onchange=e=>{DB.coachAuto=e.target.checked;save()};
 $("#resetAll").onclick=()=>{$("#resetAllConfirm").hidden=false};$("#resetAllNo").onclick=()=>{$("#resetAllConfirm").hidden=true};
 $("#resetAllYes").onclick=()=>{DB.profiles.forEach(p=>{p.learned={};p.stats={}});save();$("#resetAllConfirm").hidden=true;$("#resetAllMsg").textContent="Lesson history cleared for every player."};
-$("#demoBtn").onclick=()=>{const learned={};LESSONS.forEach(l=>learned[l.id]=true);PR={id:"demo",name:"Demo",shoots:"L",goalieAge:11,eye:3.8,learned,stats:{},clock:false};startRound(null,["deep","out","drop","set","lean","post"])};
+$("#demoBtn").onclick=()=>{const learned={};LESSONS.forEach(l=>learned[l.id]=true);PR={id:"demo",name:"Demo",shoots:"L",goalieAge:11,eye:3.8,learned,stats:{},clock:false};startRound(null)};
 try{if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)&&!/claude|anthropic|usercontent/.test(location.hostname))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 renderHome();
 
