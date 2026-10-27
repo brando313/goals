@@ -172,7 +172,7 @@ p{margin:0;line-height:1.5}
     <h1>Goalie Reads</h1>
     <h2>Who's up?</h2>
     <div class="players" id="playerList"></div>
-    <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between"><div><h3>Try the demo</h3><p class="muted">Six reps from the slot, a sharp angle, and the goal line, with every read unlocked. Nothing is saved to George or Charlie.</p></div><button class="btn primary" id="demoBtn">Start the demo</button></div>
+    <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between"><div><h3>Try the demo</h3><p class="muted">Six reps, each a different goalie read, from the slot, the wing, and a sharp angle. Nothing is saved to George or Charlie.</p></div><button class="btn primary" id="demoBtn">Start the demo</button></div>
     <p class="muted">Works offline after the first load. Add it to the Home Screen for the car.</p>
   </div>
 </div>
@@ -202,7 +202,7 @@ p{margin:0;line-height:1.5}
       <div><b>2</b>Look up high first. Young goalies leave lots of space up top.</div>
       <div><b>3</b>Pick the play that goes where he isn't.</div>
     </div>
-    <p class="muted">Open a lesson, then tap "I've got it." The game only uses goalie reads you've learned.</p>
+    <p class="muted">Open a lesson, then tap "I've got it." The game only uses lessons you've learned.</p>
     <div class="lessons" id="lessonList"></div>
   </div>
 </div>
@@ -211,6 +211,7 @@ p{margin:0;line-height:1.5}
   <div class="wrap">
     <div class="topbar"><button class="btn small" data-go="learn">All lessons</button><div class="eyebrow" id="lesZone"></div></div>
     <h1 id="lesTitle"></h1>
+    <div class="tabs" id="lesVars"></div>
     <div class="split">
       <div>
         <div class="seg" id="lesSeg" role="group" aria-label="View">
@@ -545,30 +546,49 @@ function poseGoalie(go,G,fg,parts){
   const kd=bl.clone().sub(P1).normalize();placeSeg(go.knob,bl,bl.clone().addScaledVector(kd,.3),1,1);
 }
 
+const LIE=40*Math.PI/180,SD=[-Math.cos(LIE),Math.sin(LIE)],SN=[Math.sin(LIE),Math.cos(LIE)],SC=[.04,.075],SLEN=4.0,SW=.085;
+function stickShaftTex(){return cTex(1024,64,(g,w,h)=>{g.fillStyle="#f4f5f6";g.fillRect(0,0,w,h);
+  g.fillStyle="#22356f";g.fillRect(w*.42,h*.62,w*.3,h*.16);g.fillRect(w*.5,h*.2,w*.17,h*.12);g.fillStyle="#3a64c8";g.fillRect(w*.6,h*.4,w*.16,h*.08);
+  g.fillStyle="#e9d23b";g.fillRect(w*.58,h*.3,w*.012,h*.3);g.fillRect(w*.78,h*.32,w*.012,h*.3);
+  g.fillStyle="#141414";g.fillRect(w*.94,0,w*.06,h);g.strokeStyle="rgba(255,255,255,.18)";for(let x=w*.94;x<w;x+=5){g.beginPath();g.moveTo(x,0);g.lineTo(x+4,h);g.stroke()}
+  for(let i=0;i<500;i++){g.fillStyle=`rgba(80,80,80,${Math.random()*.12})`;g.fillRect(Math.random()*w*.2,Math.random()*h,2,1)}})}
+function stickBladeTex(){return cTex(512,128,(g,w,h)=>{g.fillStyle="#f2f3f3";g.fillRect(0,0,w,h);
+  g.fillStyle="#151515";g.fillRect(w*.3,0,w*.47,h);g.strokeStyle="rgba(70,70,70,.9)";g.lineWidth=2;for(let x=w*.3;x<w*.77;x+=9){g.beginPath();g.moveTo(x,0);g.lineTo(x+6,h);g.stroke()}
+  for(let i=0;i<1400;i++){const x=Math.random()*w,y=Math.random()*h,inT=x>w*.3&&x<w*.77;g.fillStyle=inT?`rgba(230,230,230,${Math.random()*.28})`:`rgba(60,60,60,${Math.random()*.16})`;g.fillRect(x,y,1+Math.random()*2,1)}})}
 function buildPlayerStick(){
-  // blade profile in its own frame: x runs heel (0) to toe, y is height; the toe curls toward the forehand face
-  const group=new THREE.Group(),prof=new THREE.Shape();
-  prof.moveTo(.06,0);prof.lineTo(.72,0);prof.quadraticCurveTo(.83,0,.83,.08);prof.quadraticCurveTo(.83,.168,.72,.172);prof.lineTo(.06,.15);prof.quadraticCurveTo(0,.15,0,.1);prof.lineTo(0,.05);prof.quadraticCurveTo(0,0,.06,0);
-  const bg=new THREE.ExtrudeGeometry(prof,{depth:.022,bevelEnabled:true,bevelThickness:.004,bevelSize:.004,bevelSegments:2,curveSegments:12});remapUV(bg);bg.translate(0,0,-.011);bg.rotateX(Math.PI/2);
-  const bp=bg.attributes.position;for(let i=0;i<bp.count;i++){const t=clamp(bp.getX(i)/.83,0,1);bp.setY(i,bp.getY(i)+.06*t*t)}bp.needsUpdate=true;bg.computeVertexNormals();
-  const blade=new THREE.Mesh(bg,std({map:tapeTex(),roughness:.75}));blade.castShadow=true;group.add(blade);
-  const sg=new THREE.ExtrudeGeometry(rrShape(1,.72,.3),{depth:1,bevelEnabled:false,curveSegments:4});sg.translate(0,0,-.5);sg.rotateX(-Math.PI/2);sg.computeVertexNormals();
-  const shaft=new THREE.Mesh(sg,std({color:"#141416",roughness:.45,metalness:.1})),stripe=new THREE.Mesh(sg,std({color:"#e9e9e6",roughness:.5}));
-  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;
-  [shaft,stripe,puck].forEach(m=>m.castShadow=true);
-  return{group,blade,shaft,stripe,puck,all:[group,shaft,stripe,puck]}
+  // one stick, built in its own upright plane: x runs from the heel toward the toe, y is height
+  const group=new THREE.Group(),C0=SC,P=(t,o)=>new THREE.Vector2(C0[0]+SD[0]*t+SN[0]*o,C0[1]+SD[1]*t+SN[1]*o);
+  // shaft and neck: the bottom of the shaft curves smoothly into the top and back of the blade
+  const sh=new THREE.Shape(),hw=SW/2,b1=P(.62,hw),e1=P(SLEN,hw),e2=P(SLEN,-hw),b2=P(.42,-hw);
+  sh.moveTo(.36,.215);sh.quadraticCurveTo(.06,.23,b1.x,b1.y);sh.lineTo(e1.x,e1.y);sh.lineTo(e2.x,e2.y);sh.lineTo(b2.x,b2.y);sh.quadraticCurveTo(-.12,.0,.1,.0);sh.lineTo(.36,0);sh.closePath();
+  const sg=new THREE.ExtrudeGeometry(sh,{depth:.06,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:3,curveSegments:18});sg.translate(0,0,-.03);
+  {const p=sg.attributes.position,uv=sg.attributes.uv;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),dx=x-C0[0],dy=y-C0[1],t=dx*SD[0]+dy*SD[1],o=dx*SN[0]+dy*SN[1];
+    uv.setXY(i,clamp(t/SLEN,0,1),clamp(o/SW+.5,0,1));const k=clamp((x+.04)/.38,0,1);p.setZ(i,p.getZ(i)*(1-.62*k))}p.needsUpdate=true;uv.needsUpdate=true}
+  sg.computeVertexNormals();sg.rotateX(Math.PI/2);
+  const shaft=new THREE.Mesh(sg,std({map:stickShaftTex(),roughness:.38,metalness:.05}));shaft.castShadow=true;group.add(shaft);
+  // blade: taller toward the rounded toe, thin, with a curve that cups the puck
+  const bl=new THREE.Shape();bl.moveTo(.12,0);bl.lineTo(.84,0);bl.quadraticCurveTo(1.0,0,1.0,.13);bl.quadraticCurveTo(.99,.27,.84,.275);bl.quadraticCurveTo(.55,.26,.33,.22);bl.lineTo(.12,.21);bl.lineTo(.12,0);
+  const bg=new THREE.ExtrudeGeometry(bl,{depth:.016,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:2,curveSegments:16});remapUV(bg);bg.translate(0,0,-.008);bg.rotateX(Math.PI/2);
+  {const p=bg.attributes.position;for(let i=0;i<p.count;i++){const t=clamp((p.getX(i)-.15)/.85,0,1);p.setY(i,p.getY(i)+.075*t*t)}p.needsUpdate=true;bg.computeVertexNormals()}
+  const blade=new THREE.Mesh(bg,std({map:stickBladeTex(),roughness:.7}));blade.castShadow=true;group.add(blade);
+  // the player's own gloves on the stick: top hand near the knob, bottom hand lower on the shaft
+  const gm=std({color:"#1c1f26",roughness:.6}),gr=std({color:"#b81d26",roughness:.55}),gw=std({color:"#eceae4",roughness:.6}),axis=new THREE.Vector3(SD[0],0,SD[1]);
+  [[3.62,1],[2.35,.95]].forEach(([t,sc])=>{const gg=new THREE.Group(),fist=new THREE.Mesh(rBoxGeo(.4,.34,.36,.13),gm);gg.add(fist);
+    const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.2,.23,.3,20),gr);cuff.rotation.z=Math.PI/2;cuff.position.set(-.33,0,0);gg.add(cuff);
+    const band=new THREE.Mesh(new THREE.CylinderGeometry(.235,.235,.05,20),gw);band.rotation.z=Math.PI/2;band.position.set(-.26,0,0);gg.add(band);
+    for(let i=0;i<3;i++){const roll=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.26,4,10),gm);roll.rotation.x=Math.PI/2;roll.position.set(.1-i*.11,.0,.17);gg.add(roll)}
+    gg.traverse(o=>{if(o.isMesh)o.castShadow=true});const p=new THREE.Vector3(SC[0]+SD[0]*t,0,SC[1]+SD[1]*t);gg.position.copy(p);gg.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),axis);gg.scale.setScalar(sc);group.add(gg)});
+  const puck=new THREE.Mesh(new THREE.CylinderGeometry(.125,.125,.083,28),std({color:"#0b0b0b",roughness:.3}));puck.rotation.x=Math.PI/2;puck.castShadow=true;
+  return{group,blade,shaft,puck,all:[group,puck]}
 }
 function poseStick(vm,P,hand){
-  // a real stick: the shaft and blade lie in one upright plane, the blade runs on from the heel in the line of the shaft,
-  // and the forehand face cups the puck from behind
+  // the whole stick sits in one upright plane; the blade points away from the hands, and its forehand face cups the puck
   const h=hand==="L"?-1:1,f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],pk=bladeOf(P,hand);
-  const Hd=[P[0]-r2[0]*h*.3+f2[0]*1.05,P[1]-r2[1]*h*.3+f2[1]*1.05];
+  const Hd=[P[0]-r2[0]*h*.5+f2[0]*1.0,P[1]-r2[1]*h*.5+f2[1]*1.0];
   const u=n2([pk[0]-Hd[0],pk[1]-Hd[1]]),lp=[-u[1],u[0]],s=(lp[0]*f2[0]+lp[1]*f2[1])>0?1:-1,n=[lp[0]*s,lp[1]*s];
-  const heel=[pk[0]-u[0]*.42-n[0]*.17,pk[1]-u[1]*.42-n[1]*.17];
-  vm.group.position.set(heel[0],heel[1],0);vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(u[0],u[1],0),new THREE.Vector3(lp[0],lp[1],0),new THREE.Vector3(0,0,1)));vm.group.scale.set(1,s,1);
-  vm.puck.position.set(pk[0],pk[1],.042);
-  const A=new THREE.Vector3(heel[0]+u[0]*.03,heel[1]+u[1]*.03,.1),dir=new THREE.Vector3(Hd[0],Hd[1],2.0).sub(A).normalize(),Hh=A.clone().addScaledVector(dir,4.1);
-  placeSeg(vm.shaft,A,Hh,.07,.055);placeSeg(vm.stripe,A.clone().addScaledVector(dir,1.0),A.clone().addScaledVector(dir,1.2),.074,.059)}
+  const heel=[pk[0]-u[0]*.55-n[0]*.21,pk[1]-u[1]*.55-n[1]*.21];
+  vm.group.position.set(heel[0],heel[1],0);vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(u[0],u[1],0),new THREE.Vector3(lp[0],lp[1],0),new THREE.Vector3(0,0,1)));vm.group.scale.set(1,-s,1);
+  vm.puck.position.set(pk[0],pk[1],.042)}
 function eyeTgt(eye){const f=n2([-eye[0],-eye[1]]),d=10;return[eye[0]+f[0]*d,eye[1]+f[1]*d,eye[2]-d*Math.tan(29*Math.PI/180)]}
 function setCamera(T,eye,tgt,W,H){tgt=tgt||eyeTgt(eye);const F=Math.min(H/(2*Math.tan(31*Math.PI/180)),W*1.2);T.camera.fov=2*Math.atan(H/2/F)*180/Math.PI;T.camera.aspect=W/H;T.camera.position.set(eye[0],eye[1],eye[2]);T.camera.lookAt(tgt[0],tgt[1],tgt[2]);T.camera.updateProjectionMatrix();T.camera.updateMatrixWorld()}
 function openGrid3(O){const T=three();T.goalie.group.updateMatrixWorld(true);const rc=new THREE.Raycaster(),o=new THREE.Vector3(...O),g=new Array(GX*GZ),targets=[];T.goalie.group.traverse(m=>{if(m.isMesh)targets.push(m)});
@@ -728,6 +748,21 @@ const CUES=[
   rate:c=>({carry:B("He's stuck on the post where you went in. Come out the other side and you'll have open net."),wrap:G("A wraparound can work if you're quick, but coming out front gives you a better chance."),reverse:L("He's still on that side, waiting.")})}
 ];
 const CUE={};CUES.forEach(c=>CUE[c.id]=c);
+const GROUPS=[
+ {id:"top",name:"He leaves the top open",tip:"Shoot high",v:[["drop","He drops down"],["deep","He sits deep"],["gloveLow","His glove is low"]]},
+ {id:"tall",name:"He stands tall and waits",tip:"Fake a shot, then deke",v:[["tall",""]]},
+ {id:"challenge",name:"He comes way out",tip:"Deke wide around him",v:[["challenge",""]]},
+ {id:"legs",name:"He opens his legs",tip:"Five-hole",v:[["legs",""]]},
+ {id:"cheat",name:"He cheats to your side",tip:"Shoot far side",v:[["cheat",""]]},
+ {id:"poke",name:"He pokes his stick out",tip:"Pull it wide around his stick",v:[["poke",""]]},
+ {id:"moving",name:"He's moving across",tip:"Shoot where he isn't",v:[["slide","Sliding across"],["late","Late to the post"],["early","Left the post early"],["scramble","Still sliding over"]]},
+ {id:"post",name:"He's stuck on the post",tip:"Make him move",v:[["seal","From a sharp angle"],["hug","From the goal line"]]},
+ {id:"behind",name:"Behind the net",tip:"Come out where he isn't",v:[["bFollow","He slides over early"],["bStay","He stays on his post"]]}];
+const GROUP={},GROUP_OF={};GROUPS.forEach(g=>{GROUP[g.id]=g;g.v.forEach(([id])=>GROUP_OF[id]=g.id)});
+const groupPlayable=gid=>GROUP[gid].v.map(([id])=>CUE[id]).filter(c=>c.zones.length);
+function groupZone(g){if(g.id==="behind")return ZONES.behind;const z=[];g.v.forEach(([id])=>CUE[id].zones.forEach(x=>{if(!z.includes(x))z.push(x)}));if(!z.length)return ZONES.phase3;return z.map(x=>ZONES[x].replace("From ","")).join(", ").replace(/^./,m=>"From "+m)}
+if(!DB.groupsV1){DB.profiles.forEach(p=>{const L={},S={};Object.keys(p.learned||{}).forEach(k=>{const gid=GROUP[k]?k:GROUP_OF[k];if(gid)L[gid]=true});
+  Object.keys(p.stats||{}).forEach(k=>{const gid=GROUP[k]?k:GROUP_OF[k];if(!gid)return;const a=S[gid]||(S[gid]={best:0,good:0,less:0,ms:0,n:0}),b=p.stats[k];["best","good","less","ms","n"].forEach(x=>a[x]+=b[x]||0)});p.learned=L;p.stats=S});DB.groupsV1=true;save()}
 function fullRate(cue,c,opts){const r=cue.rate(c),o={};opts.forEach(id=>{o[id]=r[id]||L("This can work sometimes, but it isn't what this goalie is giving you.")});return o}
 const RANK={best:0,good:1,less:2};
 const RLABEL={best:"Best read",good:"Good read",less:"Less likely"};
@@ -751,10 +786,10 @@ function initials(n){return (n||"?").trim()[0]?.toUpperCase()||"?"}
 function renderHome(){const el=$("#playerList");el.innerHTML="";DB.profiles.forEach(p=>{const b=document.createElement("button");b.className="pcard";
   b.innerHTML=`<div class="jersey">${initials(p.name)}</div><div><div class="name"></div><div class="muted"></div><div class="muted"></div></div>`;
   b.querySelector(".name").textContent=p.name;const m=b.querySelectorAll(".muted");m[0].textContent=`Shoots ${p.shoots==="L"?"left":"right"}`;
-  m[1].textContent=`${Object.keys(p.learned).length} of ${CUES.length} reads learned`;b.onclick=()=>{PR=p;openMenu()};el.appendChild(b)});show("home")}
+  m[1].textContent=`${GROUPS.filter(g=>p.learned[g.id]).length} of ${GROUPS.length} lessons learned`;b.onclick=()=>{PR=p;openMenu()};el.appendChild(b)});show("home")}
 function openMenu(){if(!PR)return renderHome();$("#menuTitle").textContent=`${PR.name}'s goalie reads`;$("#menuSub").textContent=`Shoots ${PR.shoots==="L"?"left":"right"}. Goalies age ${PR.goalieAge}.`;
-  const n=Object.keys(PR.learned).length,pool=playPool().length;$("#tLearnSub").textContent=`${n} of ${CUES.length} learned. Start here.`;
-  $("#tPlayLearn").disabled=$("#tPlayGame").disabled=pool<2;$("#playNote").textContent=pool<2?"Learn at least 2 reads to start playing. The game only shows goalies you've learned to read.":"";
+  const n=GROUPS.filter(g=>PR.learned[g.id]).length,pool=GROUPS.filter(g=>PR.learned[g.id]&&groupPlayable(g.id).length).length;$("#tLearnSub").textContent=`${n} of ${GROUPS.length} learned. Start here.`;
+  $("#tPlayLearn").disabled=$("#tPlayGame").disabled=pool<2;$("#playNote").textContent=pool<2?"Learn at least 2 lessons to start playing. The game only shows goalies you've learned to read.":"";
   $("#pauseToggle").checked=!!PR.pause;show("menu")}
 $("#pauseToggle").onchange=e=>{PR.pause=e.target.checked;save()};
 $("#tLearn").onclick=()=>openLearn();$("#tPlayLearn").onclick=()=>startRound("learn");$("#tPlayGame").onclick=()=>startRound("game");
@@ -767,10 +802,9 @@ function makeThumb(cue){const W=300,H=340,cv=document.createElement("canvas");cv
   if(snap.kind==="top"){renderTop(ctx,W,H,snap.top)}
   else{const G=snap.G,d=n2([snap.P[0]-G[0],snap.P[1]-G[1]]);renderView(ctx,W,H,{eye:[G[0]+d[0]*5.4,G[1]+d[1]*5.4,2.6],tgt:[G[0],G[1],1.9],G,fg:snap.fg,parts:snap.parts})}
   return cv.toDataURL("image/jpeg",.82)}
-function openLearn(){const el=$("#lessonList");el.innerHTML="";CUES.forEach(cue=>{const b=document.createElement("button");b.className="lcard"+(PR.learned[cue.id]?" done":"");
-  b.innerHTML=`<span class="thumb"><img alt=""></span><span class="check">${PR.learned[cue.id]?"&#10003;":""}</span><span class="z"></span><span class="t"></span><span class="tip"></span>`;queueThumb(cue,b.querySelector(".thumb img"));
-  b.querySelector(".z").textContent=cue.top?ZONES.behind:cue.zones.length?cue.zones.map(z=>ZONES[z].replace("From ","")).join(", ").replace(/^./,m=>"From "+m):ZONES.phase3;
-  b.querySelector(".t").textContent=cue.name;b.querySelector(".tip").textContent=cue.tip;b.onclick=()=>openLesson(cue.id);el.appendChild(b)});show("learn")}
+function openLearn(){const el=$("#lessonList");el.innerHTML="";GROUPS.forEach(gr=>{const cue=CUE[gr.v[0][0]],b=document.createElement("button");b.className="lcard"+(PR.learned[gr.id]?" done":"");
+  b.innerHTML=`<span class="thumb"><img alt=""></span><span class="check">${PR.learned[gr.id]?"&#10003;":""}</span><span class="z"></span><span class="t"></span><span class="tip"></span>${gr.v.length>1?`<span class="z" style="text-transform:none;letter-spacing:0">${gr.v.length} examples</span>`:""}`;queueThumb(cue,b.querySelector(".thumb img"));
+  b.querySelector(".z").textContent=groupZone(gr);b.querySelector(".t").textContent=gr.name;b.querySelector(".tip").textContent=gr.tip;b.onclick=()=>openLesson(gr.id);el.appendChild(b)});show("learn")}
 
 /* view toggles shared by lesson and debrief */
 let viewMode="eyes";
@@ -838,13 +872,15 @@ function lessonSnap(cue){const zone=cue.zones[0]||(cue.id==="scramble"?"phase3":
   if(cue.top){const variant=cue.id==="bFollow"?"follow":"stay";return{kind:"top",c:{...c,zone:"behind"},top:topScene(sx,variant,"decide",1,c)}}
   const ap={S:r,E:r,cueId:cue.id,ctx:c,g0:cue.id==="scramble"?c.g0:null};const gs=goalieAt(ap,1);
   return{kind:"fp",c,P:r,eyeH:PR.eye,hand:PR.shoots,G:gs.G,fg:gs.fg,parts:gs.parts}}
-function openLesson(id){const cue=CUE[id];LES={cue,snap:lessonSnap(cue)};$("#lesTitle").textContent=cue.name;$("#lesZone").textContent=cue.top?ZONES.behind:(cue.zones.length?ZONES[cue.zones[0]]:ZONES.phase3);
+function openLesson(id,vi){const gr=GROUP[id]||GROUP[GROUP_OF[id]];vi=vi||0;const cue=CUE[gr.v[vi][0]];LES={gr,vi,cue,snap:lessonSnap(cue)};$("#lesTitle").textContent=gr.name;$("#lesZone").textContent=groupZone(gr);
+  const tabs=$("#lesVars");tabs.innerHTML="";if(gr.v.length>1)gr.v.forEach(([vid,lab],i)=>{const b=document.createElement("button");b.textContent=lab;b.setAttribute("aria-pressed",i===vi);b.onclick=()=>openLesson(gr.id,i);tabs.appendChild(b)});
   $("#lesKey").textContent=cue.key;$("#lesOpens").textContent=cue.opens;$("#lesSeg").hidden=LES.snap.kind==="top";
   const c=LES.snap.c,opts=OPTS[c.zone];renderOptList($("#lesOpts"),fullRate(cue,c,opts),c,null,`Your plays here (${PR.shoots==="L"?"left":"right"} shot)`);
-  $("#lesGot").textContent=PR.learned[id]?"Learned":"I've got it";LES.marks={best:Object.entries(fullRate(cue,c,opts)).filter(([k,v])=>v[0]==="best").map(([k])=>k)};$("#lesPractice").hidden=!cue.zones.length;viewMode="eyes";setSeg($("#lesSeg"),viewMode);show("lesson");drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"),LES.marks)}
+  $("#lesGot").textContent=PR.learned[gr.id]?"Learned":"I've got it";LES.marks={best:Object.entries(fullRate(cue,c,opts)).filter(([k,v])=>v[0]==="best").map(([k])=>k)};$("#lesPractice").hidden=!groupPlayable(gr.id).length;
+  if(!vi)viewMode="eyes";setSeg($("#lesSeg"),viewMode);show("lesson");drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"),LES.marks)}
 $("#lesSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#lesSeg"),viewMode);drawSnapshot($("#lesViews"),LES.snap,viewMode,$("#lesCap"),LES.marks)};
-$("#lesGot").onclick=()=>{PR.learned[LES.cue.id]=true;save();$("#lesGot").textContent="Learned";setTimeout(openLearn,250)};
-$("#lesPractice").onclick=()=>{PR.learned[LES.cue.id]=true;save();startRound("learn",LES.cue.id)};
+$("#lesGot").onclick=()=>{PR.learned[LES.gr.id]=true;save();$("#lesGot").textContent="Learned";setTimeout(openLearn,250)};
+$("#lesPractice").onclick=()=>{PR.learned[LES.gr.id]=true;save();startRound("learn",LES.gr.id)};
 function renderOptList(el,rates,c,chosen,title){el.innerHTML="";if(title){const h=document.createElement("div");h.className="k muted";h.style.cssText="font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700";h.textContent=title;el.appendChild(h)}
   Object.keys(rates).sort((a,b)=>RANK[rates[a][0]]-RANK[rates[b][0]]).forEach(id=>{const [r,why]=rates[id];const d=document.createElement("div");d.className="opt"+(id===chosen?" mine":"");
     d.innerHTML=`<div class="h"><span class="chip ${r}">${RLABEL[r]}</span>${id===chosen?'<span class="chip you">You chose</span>':""}<span class="nm"></span></div><p></p>`;d.querySelector(".nm").textContent=label(id,c);d.querySelector("p").textContent=why;el.appendChild(d)})}
@@ -854,12 +890,14 @@ const cv=$("#cv"),g=cv.getContext("2d");let W=0,H=0,DPR=1;
 function resize(){DPR=Math.min(1.5,window.devicePixelRatio||1);W=cv.width=Math.round(innerWidth*DPR);H=cv.height=Math.round(innerHeight*DPR)}
 addEventListener("resize",()=>{resize();if(ST&&ST.mode==="decide")placeTargets()});
 let ROUND=null,REP=null,ST=null,raf=0,last=0,wake=null;
-function playPool(){return CUES.filter(c=>c.zones.length&&PR.learned[c.id])}
-function startRound(mode,only,seq){const pool=only?[CUE[only]]:playPool();if(!pool.length)return;ROUND={mode,only,pool,seq,i:0,count:seq?seq.length:only?5:10,results:[]};
+function playPool(){return CUES.filter(c=>c.zones.length&&PR.learned[GROUP_OF[c.id]])}
+function startRound(mode,only,seq){const pool=only?groupPlayable(only):playPool();if(!pool.length&&!seq)return;ROUND={mode,only,pool,seq,i:0,count:seq?seq.length:only?5:10,results:[],lastG:null};
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
   show("game");resize();$("#hudName").textContent=PR.name;nextRep()}
-function weightOf(cue){const s=PR.stats[cue.id]||{best:0,good:0,less:0};let w=1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2);if(cue.id==="drop"&&(GK[PR.goalieAge]||1)<.95)w*=1.4;return Math.max(.4,w)}
-function pickCue(pool){const ws=pool.map(weightOf),t=ws.reduce((a,b)=>a+b,0);let r=Math.random()*t;for(let i=0;i<pool.length;i++){r-=ws[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
+function weightOf(gid){const s=PR.stats[gid]||{best:0,good:0,less:0};return Math.max(.4,1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2))}
+function pickCue(pool){let gids=[...new Set(pool.map(c=>GROUP_OF[c.id]))];if(gids.length>1)gids=gids.filter(g=>g!==ROUND.lastG);
+  const ws=gids.map(weightOf),t=ws.reduce((a,b)=>a+b,0);let r=Math.random()*t,gid=gids[gids.length-1];for(let i=0;i<gids.length;i++){r-=ws[i];if(r<=0){gid=gids[i];break}}
+  ROUND.lastG=gid;return pick(pool.filter(c=>GROUP_OF[c.id]===gid))}
 function buildSpot(zone,sx,cue){let S,E;
   if(zone==="slot"){const th=rnd(3,16)*sx*Math.PI/180,r=cue.decR||14;E=[r*Math.sin(th),-r*Math.cos(th)];S=[E[0]*.4+sx*rnd(2,8),-38]}
   else if(zone==="wing"){const th=rnd(30,46)*sx*Math.PI/180,r=cue.decR||15.5;E=[r*Math.sin(th),-r*Math.cos(th)];S=[sx*rnd(20,26),-40]}
@@ -972,21 +1010,21 @@ $("#dbReplay").onclick=()=>{stopNarration();const d=REP.decisions[DBI];$("#debri
   startApproach({...d.ap,dur:d.ap.dur*1.8},{idx:DBI})};
 $("#dbNext").onclick=()=>{stopNarration();recordRep();$("#debrief").hidden=true;nextRep()};
 $("#endRound").onclick=()=>{stopNarration();if(REP&&REP.decisions.length&&!REP.recorded)recordRep();showSummary()};
-function recordRep(){if(REP.recorded)return;REP.recorded=true;REP.decisions.forEach(d=>{const s=PR.stats[d.cueId]||(PR.stats[d.cueId]={best:0,good:0,less:0,ms:0,n:0});s[d.r]++;if(ROUND.mode==="game"&&!d.timeout){s.ms+=d.ms;s.n++}ROUND.results.push(d)});save()}
+function recordRep(){if(REP.recorded)return;REP.recorded=true;REP.decisions.forEach(d=>{const gk=GROUP_OF[d.cueId];const s=PR.stats[gk]||(PR.stats[gk]={best:0,good:0,less:0,ms:0,n:0});s[d.r]++;if(ROUND.mode==="game"&&!d.timeout){s.ms+=d.ms;s.n++}ROUND.results.push(d)});save()}
 
 /* ---------- summary, progress, settings ---------- */
 function showSummary(){stopLoop();ST=null;const rs=ROUND?ROUND.results:[];const cnt={best:0,good:0,less:0};rs.forEach(d=>cnt[d.r]++);
   const strong=rs.filter(d=>d.r!=="less").length;$("#sumTitle").textContent=rs.length?`${PR.name} made ${strong} strong ${strong===1?"read":"reads"} out of ${rs.length}`:"No reps played this round";
   const st=$("#sumStats");st.innerHTML="";[["Best reads",cnt.best,"var(--best-fg)"],["Good reads",cnt.good,"var(--good-fg)"],["Less likely",cnt.less,"var(--less-fg)"]].forEach(([l,n,cl])=>{const d=document.createElement("div");d.className="stat";d.innerHTML=`<div class="n" style="color:${cl}">${n}</div><div class="muted">${l}</div>`;st.appendChild(d)});
   const times=rs.filter(d=>ROUND.mode==="game"&&!d.timeout).map(d=>d.ms);if(times.length){const d=document.createElement("div");d.className="stat";d.innerHTML=`<div class="n">${(times.reduce((a,b)=>a+b,0)/times.length/1000).toFixed(1)}s</div><div class="muted">Average time to pick</div>`;st.appendChild(d)}
-  const by={};rs.forEach(d=>{const b=by[d.cueId]||(by[d.cueId]={ok:0,less:0});d.r==="less"?b.less++:b.ok++});
+  const by={};rs.forEach(d=>{const gk=GROUP_OF[d.cueId],b=by[gk]||(by[gk]={ok:0,less:0});d.r==="less"?b.less++:b.ok++});
   const good=$("#sumGood");good.innerHTML="";const gl=Object.keys(by).filter(k=>by[k].ok>0&&by[k].ok>=by[k].less);
-  if(gl.length)gl.forEach(k=>{const s=document.createElement("span");s.className="chip best";s.style.fontSize="15px";s.textContent=CUE[k].name;good.appendChild(s)});else{good.innerHTML='<p class="muted">Keep going. Every rep builds the habit of watching the goalie first.</p>'}
+  if(gl.length)gl.forEach(k=>{const s=document.createElement("span");s.className="chip best";s.style.fontSize="15px";s.textContent=GROUP[k].name;good.appendChild(s)});else{good.innerHTML='<p class="muted">Keep going. Every rep builds the habit of watching the goalie first.</p>'}
   const focus=Object.keys(by).filter(k=>by[k].less>0).sort((a,b)=>by[b].less-by[a].less)[0];$("#sumFocusCard").hidden=!focus;
-  if(focus){$("#sumFocus").textContent=`${CUE[focus].name}. The best play is usually: ${CUE[focus].tip.toLowerCase()}.`;$("#sumFocusBtn").onclick=()=>openLesson(focus)}
+  if(focus){$("#sumFocus").textContent=`${GROUP[focus].name}. The best play: ${GROUP[focus].tip.toLowerCase()}.`;$("#sumFocusBtn").onclick=()=>openLesson(focus)}
   $("#sumAgain").onclick=()=>startRound(ROUND?ROUND.mode:"learn",ROUND&&ROUND.only,ROUND&&ROUND.seq);show("summary")}
 function openProgress(){$("#progTitle").textContent=`${PR.name}'s reads so far`;const el=$("#progList");el.innerHTML="";
-  CUES.forEach(cue=>{const s=PR.stats[cue.id]||{best:0,good:0,less:0};const n=s.best+s.good+s.less;const row=document.createElement("div");row.className="prow";
+  GROUPS.forEach(cue=>{const s=PR.stats[cue.id]||{best:0,good:0,less:0};const n=s.best+s.good+s.less;const row=document.createElement("div");row.className="prow";
     row.innerHTML=`<div><b></b><div class="muted" style="font-size:14px"></div></div><div class="bar"></div><div class="muted" style="font-variant-numeric:tabular-nums">${n} tries</div>`;
     row.querySelector("b").textContent=cue.name;row.querySelector(".muted").textContent=PR.learned[cue.id]?"Learned":"Not learned yet";
     const bar=row.querySelector(".bar");if(n)[["best","var(--open)"],["good","var(--blue)"],["less","var(--amber)"]].forEach(([k,c])=>{const i=document.createElement("i");i.style.width=(s[k]/n*100)+"%";i.style.background=c;bar.appendChild(i)});el.appendChild(row)});show("progress")}
@@ -999,7 +1037,7 @@ $("#setResetYes").onclick=()=>{PR.learned={};PR.stats={};save();$("#setConfirm")
 
 /* ---------- offline support when installed from a website ---------- */
 try{if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)&&!/claude|anthropic|usercontent/.test(location.hostname))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
-$("#demoBtn").onclick=()=>{const learned={};CUES.forEach(c=>learned[c.id]=true);PR={id:"demo",name:"Demo",shoots:"L",goalieAge:11,eye:3.8,pause:false,learned,stats:{}};startRound("learn",null,["drop","seal","legs","hug","gloveLow","early"])};
+$("#demoBtn").onclick=()=>{const learned={};GROUPS.forEach(g=>learned[g.id]=true);PR={id:"demo",name:"Demo",shoots:"L",goalieAge:11,eye:3.8,pause:false,learned,stats:{}};startRound("learn",null,["drop","tall","seal","legs","challenge","late"])};
 $("#appSetBtn").onclick=()=>{$("#voiceToggle").checked=DB.voice!==false;$("#autoToggle").checked=DB.coachAuto!==false;$("#resetAllConfirm").hidden=true;$("#resetAllMsg").textContent="";show("appset")};
 $("#voiceToggle").onchange=e=>{DB.voice=e.target.checked;save()};$("#autoToggle").onchange=e=>{DB.coachAuto=e.target.checked;save()};
 $("#resetAll").onclick=()=>{$("#resetAllConfirm").hidden=false};$("#resetAllNo").onclick=()=>{$("#resetAllConfirm").hidden=true};
