@@ -646,6 +646,7 @@ const OPTS={
 const SHOTS=["hg","hb","mg","mb","lg","lb","fh"];
 const nearFar=z=>z==="sharp"||z==="goalline"||z==="phase3";
 function label(id,c){
+  if(DEKES.includes(id)&&c&&c.E)return dekePlan(id,c.E,PR.shoots).name;
   if(SHOTS.includes(id)&&id!=="fh"&&nearFar(c.zone)){const glove=id[1]==="g",near=(c.sx>0)===glove;return ({h:"High, ",m:"Mid-height, ",l:"Low, "}[id[0]])+(near?"near post":"far side")}
   return {hg:"High, glove side",hb:"High, blocker side",mg:"Mid-height, glove side",mb:"Mid-height, blocker side",lg:"Low, glove side",lb:"Low, blocker side",fh:"Five-hole",dd:"Double deke",dhs:"Deke, then shoot high short side",dfh:"Deke to your forehand",dbh:"Deke to your backhand",fake:"Fake a shot, then deke to your backhand",mid:"Cut to the middle",behind:"Go behind the net",front:"Walk it out front",jam:"Jam it at the near post",tuck:"Pull it across the crease",carry:"Come out the other side",reverse:"Reverse out the same side",wrap:"Wraparound"}[id]}
 const TGT={hg:[2.2,3.25],hb:[-2.2,3.25],mg:[2.55,1.85],mb:[-2.55,1.85],lg:[2.35,.45],lb:[-2.35,.45]};
@@ -988,28 +989,38 @@ function placeTargets(){const s=ST,tl=$("#tapLayer"),pb=$("#playBar");tl.innerHT
   for(let i=0;ok&&i<pts.length;i++)for(let j=i+1;j<pts.length;j++)if(Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1])<60)ok=false;
   if(ok){shots.forEach((id,i)=>{const b=document.createElement("button");b.className="tgt";b.style.left=pts[i][0]+"px";b.style.top=pts[i][1]+"px";b.setAttribute("aria-label",label(id,cx));b.innerHTML="<span></span>";b.querySelector("span").textContent={h:"High",m:"Mid",l:"Low",f:"Five-hole"}[id[0]];b.onclick=()=>choose(id);tl.appendChild(b)})}
   else shots.forEach(id=>{const b=document.createElement("button");b.className="btn shot";b.textContent="Shoot: "+label(id,cx);b.onclick=()=>choose(id);pb.appendChild(b)});
-  const dk=plays.filter(id=>DEKES.includes(id)),other=plays.filter(id=>!DEKES.includes(id));s.plans=dk.map(id=>dekePlan(id,gs.P,PR.shoots));
+  const dk=plays.filter(id=>DEKES.includes(id)),other=plays.filter(id=>!DEKES.includes(id));s.plans=dk.map(id=>dekePlan(id,gs.P,PR.shoots));s.ap.ctx.E=gs.P;
   setCamera(three(),v.eye,null,W,H);const chips=s.plans.map(pl=>{const i=Math.round(pl.route.length*.5),p=projCam(W,H,[pl.route[i][0],pl.route[i][1],.03]);return p?{id:pl.id,x:p[0]/DPR,y:p[1]/DPR}:null});
-  if(chips.every(c=>c&&c.x>60&&c.x<innerWidth-60&&c.y>60&&c.y<innerHeight-40)){chips.sort((a,b)=>a.y-b.y);for(let i=1;i<chips.length;i++)for(let j=0;j<i;j++)if(Math.abs(chips[i].x-chips[j].x)<170&&Math.abs(chips[i].y-chips[j].y)<40)chips[i].y=chips[j].y+40;
-    chips.forEach(c=>{const b=document.createElement("button");b.className="rchip";b.style.left=c.x+"px";b.style.top=c.y+"px";b.style.borderColor=DEKE_STYLE[c.id][0];b.innerHTML=`<i style="background:${DEKE_STYLE[c.id][0]}"></i><span></span>`;b.querySelector("span").textContent=DEKE_STYLE[c.id][1];b.onclick=()=>choose(c.id);tl.appendChild(b)})}
+  if(chips.every(c=>c&&c.x>60&&c.x<innerWidth-60&&c.y>60&&c.y<innerHeight-40)){chips.sort((a,b)=>a.y-b.y);for(let i=1;i<chips.length;i++)for(let j=0;j<i;j++)if(Math.abs(chips[i].x-chips[j].x)<290&&Math.abs(chips[i].y-chips[j].y)<42)chips[i].y=chips[j].y+42;
+    chips.forEach(c=>{const b=document.createElement("button");b.className="rchip";b.style.left=c.x+"px";b.style.top=c.y+"px";b.style.borderColor=DEKE_STYLE[c.id][0];b.innerHTML=`<i style="background:${DEKE_STYLE[c.id][0]}"></i><span></span>`;b.querySelector("span").textContent=s.plans.find(p=>p.id===c.id).name;b.onclick=()=>choose(c.id);tl.appendChild(b)})}
   else dk.forEach(id=>{const b=document.createElement("button");b.className="btn";b.style.borderLeft=`8px solid ${DEKE_STYLE[id][0]}`;b.textContent=label(id,cx);b.onclick=()=>choose(id);pb.appendChild(b)});
   other.forEach(id=>{const b=document.createElement("button");b.className="btn";b.textContent=label(id,cx);b.onclick=()=>choose(id);pb.appendChild(b)});pb.hidden=!pb.children.length}
 function snapNow(){const gs=goalieAt(ST.ap,1);return{kind:"fp",c:ST.ap.ctx,P:gs.P,eyeH:PR.eye,hand:PR.shoots,G:gs.G,fg:gs.fg,parts:gs.parts}}
 function chooseProb(r){return r==="best"?1:r==="good"?.55:.2}
 const DEKES=["dbh","dfh","dd","fake","dhs"];
 const DEKE_STYLE={dbh:["#3f8cff","Deke to backhand"],dfh:["#ff9f1a","Deke to forehand"],dd:["#b07cff","Double deke"],fake:["#20c9c2","Fake shot, then backhand"],dhs:["#ff5fa2","Deke, then high short side"]};
-const DEKE_KEYS={dbh:{k:[[0,1],[.35,1],[1.0,-1],[1.15,-1]],wide:4.2,end:8},dfh:{k:[[0,1],[.4,.3],[1.1,1.7],[1.25,1.7]],wide:4.2,end:8},
-  dd:{k:[[0,1],[.45,-1],[1.0,1.6],[1.15,1.6]],wide:3.6,end:8},fake:{k:[[0,1],[.6,1],[1.15,-1],[1.3,-1]],wide:3.8,end:8,windup:[.1,.55]},dhs:{k:[[0,1],[.3,1],[.85,-1],[.95,-1]],wide:3,end:10,high:true}};
 function keyAt(k,t){if(t<=k[0][0])return k[0][1];for(let i=1;i<k.length;i++){if(t<=k[i][0]){const a=sm((t-k[i-1][0])/(k[i][0]-k[i-1][0]));return k[i-1][1]+(k[i][1]-k[i-1][1])*a}}return k[k.length-1][1]}
 function latOf(s,h){return s>=0?h*1.75*s:h*1.25*s}
-function dekePlan(id,E,hand){const K=DEKE_KEYS[id],h=hand==="L"?-1:1,f=n2([-E[0],-E[1]]),r=[f[1],-f[0]],dEnd=K.k[K.k.length-1][0];
-  const sEnd=K.k[K.k.length-1][1],lEnd=latOf(sEnd,h),Lend=Math.sign(lEnd)*K.wide,drift=Lend-lEnd,fwd=Math.max(2,Math.hypot(E[0],E[1])-K.end);
-  const P1=[E[0]+f[0]*fwd+r[0]*drift,E[1]+f[1]*fwd+r[1]*drift];
-  const at=t=>{const a=eo(clamp(t/dEnd,0,1)),P=l2(E,P1,a),f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sd=keyAt(K.k,t),lat=latOf(sd,h),fw=sd>=0?3.1:3.1-.2*Math.min(1,-sd);
-    const w=K.windup?Math.sin(clamp((t-K.windup[0])/(K.windup[1]-K.windup[0]),0,1)*Math.PI):0;return{P,side:sd,windup:w,pk:[P[0]+r2[0]*lat+f2[0]*fw,P[1]+r2[1]*lat+f2[1]*fw,.2]}};
-  const end=at(dEnd).pk,sideX=end[0]>=0?1:-1,T=K.high?[sideX*2.2,.3,3.2]:[sideX*2.35,.3,.45];
+function dekePlan(id,E,hand){
+  // every deke is built from where the shooter is: the near side is the side of the net he's on, the far side is across the front of the net
+  const h=hand==="L"?-1:1,fh=h,bh=-h,f=n2([-E[0],-E[1]]),r=[f[1],-f[0]],near=Math.abs(E[0])>.5?Math.sign(E[0]*r[0]||E[0]):fh,far=-near;
+  const postToward=side=>[[-3,0],[3,0]].reduce((b,p)=>(p[0]*r[0]+p[1]*r[1])*side>(b[0]*r[0]+b[1]*r[1])*side?p:b);
+  const cross=side=>side*(Math.abs(postToward(side)[0]*r[0]+postToward(side)[1]*r[1])+.8);
+  // every deke finishes across the front of the net at the far post, except high short side, which finishes on the near post
+  const fv=1.7,bv=-1,farV=far===fh?fv:bv,nearV=near===fh?fv:bv,HN={1:"forehand",[-1]:"backhand"};
+  let k,dr,goSide=far,high=false,windup=null,name;
+  if(id==="dbh"||id==="dfh"){const X=id==="dfh"?fh:bh,Xv=X===fh?fv:bv;
+    if(X===far){k=[[0,1],[.4,Xv*(X===fh?.2:1)],[1.1,Xv],[1.25,Xv]];dr=[[0,0],[.3,0],[1.25,cross(far)]];name="Deke to your "+HN[X===fh?1:-1]}
+    else{k=[[0,1],[.35,Xv],[.7,Xv*.8],[1.15,farV],[1.3,farV]];dr=[[0,0],[.4,near*1.3],[1.3,cross(far)]];name=(X===fh?"Forehand":"Backhand")+", then across to "+HN[far===fh?1:-1]}}
+  else if(id==="dd"){k=[[0,1],[.3,farV],[.65,nearV],[1.15,farV],[1.3,farV]];dr=[[0,0],[.3,0],[.65,near*1.3],[1.3,cross(far)]];name="Double deke"}
+  else if(id==="fake"){k=[[0,1],[.6,1],[1.15,farV],[1.3,farV]];dr=[[0,0],[.6,0],[1.3,cross(far)]];windup=[.1,.55];name="Fake a shot, then go across the net"}
+  else{k=[[0,1],[.3,farV*.5],[.75,farV],[.9,farV]];dr=[[0,0],[.25,0],[.9,far*.6]];goSide=near;high=true;name="Deke, then shoot high short side"}
+  const dEnd=k[k.length-1][0],K={k,windup,high},fwd=Math.max(2,Math.hypot(E[0],E[1])-(high?10:8));
+  const at=t=>{const a=eo(clamp(t/dEnd,0,1)),L0=keyAt(dr,t),P=[E[0]+f[0]*fwd*a+r[0]*L0,E[1]+f[1]*fwd*a+r[1]*L0],f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sd=keyAt(k,t),lat=latOf(sd,h),fw=sd>=0?3.1:3.1-.2*Math.min(1,-sd);
+    const w=windup?Math.sin(clamp((t-windup[0])/(windup[1]-windup[0]),0,1)*Math.PI):0;return{P,side:sd,windup:w,pk:[P[0]+r2[0]*lat+f2[0]*fw,P[1]+r2[1]*lat+f2[1]*fw,.2]}};
+  const post=postToward(goSide),T=high?[post[0]*.73,.3,3.2]:[post[0]*.8,.3,.45];
   const route=[];for(let i=0;i<=24;i++)route.push(at(dEnd*i/24).pk);
-  return{id,K,dEnd,at,T,route,P1,fakeAt:K.windup?at((K.windup[0]+K.windup[1])/2).pk:null}}
+  return{id,K,dEnd,at,T,route,P1:at(dEnd).P,name,fakeAt:windup?at((windup[0]+windup[1])/2).pk:null}}
 function drawRoute(g,W,H,plan,color,opt){opt=opt||{};const pts=plan.route.map(p=>projCam(W,H,[p[0],p[1],.03])).filter(Boolean);if(pts.length<2)return null;const lw=Math.max(5,W*.008)*(opt.thin?.7:1);
   g.save();g.lineCap="round";g.lineJoin="round";g.strokeStyle="rgba(0,0,0,.35)";g.lineWidth=lw+4;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
   g.strokeStyle=color;g.lineWidth=lw;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
