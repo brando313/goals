@@ -569,7 +569,7 @@ function buildPlayerStick(){
   // blade: taller toward the rounded toe, thin, with a curve that cups the puck
   const bl=new THREE.Shape();bl.moveTo(.12,0);bl.lineTo(.84,0);bl.quadraticCurveTo(1.0,0,1.0,.13);bl.quadraticCurveTo(.99,.27,.84,.275);bl.quadraticCurveTo(.55,.26,.33,.22);bl.lineTo(.12,.21);bl.lineTo(.12,0);
   const bg=new THREE.ExtrudeGeometry(bl,{depth:.016,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:2,curveSegments:16});remapUV(bg);bg.translate(0,0,-.008);bg.rotateX(Math.PI/2);
-  {const p=bg.attributes.position;for(let i=0;i<p.count;i++){const t=clamp((p.getX(i)-.15)/.85,0,1);p.setY(i,p.getY(i)+.075*t*t)}p.needsUpdate=true;bg.computeVertexNormals()}
+  {const p=bg.attributes.position;for(let i=0;i<p.count;i++){const t=clamp((p.getX(i)-.15)/.85,0,1);p.setY(i,p.getY(i)+.11*t*t)}p.needsUpdate=true;bg.computeVertexNormals()}
   const blade=new THREE.Mesh(bg,std({map:stickBladeTex(),roughness:.7}));blade.castShadow=true;group.add(blade);
   // the player's own gloves on the stick: top hand near the knob, bottom hand lower on the shaft
   const gm=std({color:"#1c1f26",roughness:.6}),gr=std({color:"#b81d26",roughness:.55}),gw=std({color:"#eceae4",roughness:.6}),axis=new THREE.Vector3(SD[0],0,SD[1]);
@@ -587,7 +587,7 @@ function poseStick(vm,P,hand){
   const Hd=[P[0]-r2[0]*h*.5+f2[0]*1.0,P[1]-r2[1]*h*.5+f2[1]*1.0];
   const u=n2([pk[0]-Hd[0],pk[1]-Hd[1]]),lp=[-u[1],u[0]],s=(lp[0]*f2[0]+lp[1]*f2[1])>0?1:-1,n=[lp[0]*s,lp[1]*s];
   const heel=[pk[0]-u[0]*.55-n[0]*.21,pk[1]-u[1]*.55-n[1]*.21];
-  vm.group.position.set(heel[0],heel[1],0);vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(u[0],u[1],0),new THREE.Vector3(lp[0],lp[1],0),new THREE.Vector3(0,0,1)));vm.group.scale.set(1,-s,1);
+  vm.group.position.set(heel[0],heel[1],0);vm.group.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(u[0],u[1],0),new THREE.Vector3(lp[0],lp[1],0),new THREE.Vector3(0,0,1)));vm.group.scale.set(1,s,1);
   vm.puck.position.set(pk[0],pk[1],.042)}
 function eyeTgt(eye){const f=n2([-eye[0],-eye[1]]),d=10;return[eye[0]+f[0]*d,eye[1]+f[1]*d,eye[2]-d*Math.tan(29*Math.PI/180)]}
 function setCamera(T,eye,tgt,W,H){tgt=tgt||eyeTgt(eye);const F=Math.min(H/(2*Math.tan(31*Math.PI/180)),W*1.2);T.camera.fov=2*Math.atan(H/2/F)*180/Math.PI;T.camera.aspect=W/H;T.camera.position.set(eye[0],eye[1],eye[2]);T.camera.lookAt(tgt[0],tgt[1],tgt[2]);T.camera.updateProjectionMatrix();T.camera.updateMatrixWorld()}
