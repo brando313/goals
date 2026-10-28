@@ -182,7 +182,7 @@ p{margin:0;line-height:1.5}
     <h1 id="menuTitle"></h1>
     <div class="tiles">
       <button class="tile hot" id="tLearn"><span class="t">Learn the reads</span><span class="muted" id="tLearnSub"></span></button>
-      <button class="tile" id="tPlay"><span class="t">Play the rounds</span><span class="muted">Seven rounds, one read each. Then a mixed round.</span></button>
+      <button class="tile" id="tPlay"><span class="t">Play the rounds</span><span class="muted">Eight rounds, one read each. Then a mixed round.</span></button>
       <button class="tile" id="tProgress"><span class="t">My stars</span><span class="muted">See which reads are getting strong.</span></button>
       <button class="tile" id="tSettings"><span class="t">Settings</span><span class="muted">Shooting hand and goalie size.</span></button>
     </div>
@@ -203,7 +203,7 @@ p{margin:0;line-height:1.5}
       <div><b>2</b>Find the open net.</div>
       <div><b>3</b>Shoot there, or go around him.</div>
     </div>
-    <p class="muted">Seven goalie reads. Open one, watch it, then tap "I've got it." Play uses the reads you've learned.</p>
+    <p class="muted">Eight goalie reads. Open one, watch it, then tap "I've got it." Play uses the reads you've learned.</p>
     <div class="lessons" id="lessonList"></div>
   </div>
 </div>
@@ -272,7 +272,7 @@ p{margin:0;line-height:1.5}
     <div class="statgrid" id="sumStats"></div>
     <div class="card"><h3>Reads you're getting strong at</h3><div class="row" id="sumGood" style="margin-top:10px"></div></div>
     <div class="row"><button class="btn primary big" id="sumAgain">Next round</button><button class="btn" id="sumRetry">Play this round again</button><button class="btn" data-go="menu">Back to menu</button></div>
-    <div class="card"><h3>All seven rounds</h3><p class="muted" style="margin:4px 0 12px">Tap any round to play it. Each round is 3 reps of one read.</p><div class="rounds" id="sumRounds"></div></div>
+    <div class="card"><h3>All eight rounds</h3><p class="muted" style="margin:4px 0 12px">Tap any round to play it. Each round is a few reps of one read, starting and deciding at set spots.</p><div class="rounds" id="sumRounds"></div></div>
   </div>
 </div>
 
@@ -664,59 +664,73 @@ const $=s=>document.querySelector(s);
 
 /* ================= the seven reads ================= */
 const B=w=>["best",w],G=w=>["good",w],N=w=>["less",w];
-const SHOTS=["hg","hb","mg","mb","lg","lb","fh"],ROUTES=["around_fh","around_bh","fake_bh","fake_across","across"];
+const SHOTS=["hg","hb","mg","mb","lg","lb","fh"],ROUTES=["fake_wb","fake_wg","deke_bg","deke_gb"];
 const TGT={hg:[2.2,3.25],hb:[-2.2,3.25],mg:[2.55,1.85],mb:[-2.55,1.85],lg:[2.35,.45],lb:[-2.35,.45]};
 const SHOTNAME={hg:"High, glove side",hb:"High, blocker side",mg:"Mid, glove side",mb:"Mid, blocker side",lg:"Low, glove side",lb:"Low, blocker side",fh:"Five-hole"};
-const ROUTE_STYLE={around_fh:["#ff9f1a","Single deke, forehand"],around_bh:["#3f8cff","Single deke, backhand"],fake_bh:["#ff5fa2","Fake a shot, then deke to backhand"],fake_across:["#20c9c2","Fake a shot, then carry across"],across:["#b07cff","Carry it across"]};
+const ROUTE_STYLE={fake_wb:["#20c9c2","Fake shot, wide blocker side","Fake, wide blocker"],fake_wg:["#b07cff","Fake shot, wide glove side","Fake, wide glove"],deke_bg:["#ff9f1a","Deke to blocker, go wide glove side","Deke blocker, wide glove"],deke_gb:["#3f8cff","Deke to glove, go wide blocker side","Deke glove, wide blocker"]};
+// glove side of the net is +x, blocker side is -x. far-side routes from a post: the ones that finish on the other side
+function farRoutes(sx){return sx>0?{far:"deke_gb",farFake:"fake_wb",near:["deke_bg","fake_wg"]}:{far:"deke_bg",farFake:"fake_wg",near:["deke_gb","fake_wb"]}}
+function effLes(id,c){return id==="behind"&&c&&c.v?LESSON[c.v]:LESSON[id]}
 const ZONES={slot:"From the slot",wing:"From the wing",sharp:"From a bad angle"};
 const LESSONS=[
  {id:"deep",n:1,title:"He stays deep in his net",rule:"Open net? Shoot now.",best:"Shoot high",kid:"He's way back in his net.",
   look:"Look at his feet. He's back near his goal line, so lots of net is showing.",lookAt:"feet",
   why:"When he stays back, you can see net all around him. Don't wait for him to come out. Shoot high right away.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
+  zones:["slot","wing"],routes:ROUTES,
   rate:c=>({hg:B("He's deep, so the top corners are open. Shoot high now."),hb:B("He's deep, so the top corners are open. Shoot high now."),mg:G("The sides are open too. High is the biggest space."),mb:G("The sides are open too. High is the biggest space."),lg:G("The low corners are open too, but his pads can slide there."),lb:G("The low corners are open too, but his pads can slide there."),fh:N("His stick is right in the five-hole."),
-    around_fh:N("He's showing you the net. Shoot!"),around_bh:N("He's showing you the net. Shoot!"),fake_bh:N("He's showing you the net. No need to fake. Shoot!"),fake_across:N("He's showing you the net. No need to fake. Shoot!")})},
+    deke_bg:N("He's showing you the net. Shoot!"),deke_gb:N("He's showing you the net. Shoot!"),fake_wb:N("He's showing you the net. No need to fake. Shoot!"),fake_wg:N("He's showing you the net. No need to fake. Shoot!")})},
  {id:"drop",n:2,title:"He drops down early",rule:"He drops? Go high.",best:"Shoot high",kid:"He dropped down.",
   look:"Look at his pads. They're flat on the ice and his shoulders are low.",lookAt:"pads",
   why:"When a goalie drops, his pads cover the bottom but the top of the net opens up. Lift the puck over his shoulder.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
+  zones:["slot","wing"],routes:ROUTES,
   rate:c=>({hg:B("He's down, so the top corners are wide open."),hb:B("He's down, so the top corners are wide open."),mg:G("Just above his pad can go in. High is bigger."),mb:G("Just above his pad can go in. High is bigger."),lg:N("His pads are flat on the ice right there."),lb:N("His pads are flat on the ice right there."),fh:N("When he drops, his pads close the five-hole."),
-    around_fh:N("He's already down. Shoot high now instead of waiting."),around_bh:N("He's already down. Shoot high now instead of waiting."),fake_bh:N("He already dropped. Shoot high now."),fake_across:N("He already dropped. You don't need to fake. Shoot high.")})},
+    deke_bg:N("He's already down. Shoot high now instead of waiting."),deke_gb:N("He's already down. Shoot high now instead of waiting."),fake_wb:N("He already dropped. You don't need to fake. Shoot high."),fake_wg:N("He already dropped. You don't need to fake. Shoot high.")})},
  {id:"legs",n:3,title:"He opens his legs",rule:"Legs open? Five-hole.",best:"Five-hole",kid:"His legs are wide open.",
   look:"Look between his pads. There's a big gap.",lookAt:"fh",
   why:"The five-hole is the space between his legs. When it's open, a quick shot along the ice goes right through.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
+  zones:["slot","wing"],routes:ROUTES,
   rate:c=>({fh:B("There's a big gap between his pads. Shoot along the ice, right through it."),hg:G("Up high is open too. The five-hole is wide open right now."),hb:G("Up high is open too. The five-hole is wide open right now."),mg:N("His glove is right there."),mb:N("His blocker is right there."),lg:N("His pad covers that corner."),lb:N("His pad covers that corner."),
-    around_fh:N("The five-hole is open right now. Shoot before he closes it."),around_bh:N("The five-hole is open right now. Shoot before he closes it."),fake_bh:N("The five-hole is open right now. Shoot before he closes it."),fake_across:N("The five-hole is open right now. Shoot before he closes it.")})},
+    deke_bg:N("The five-hole is open right now. Shoot before he closes it."),deke_gb:N("The five-hole is open right now. Shoot before he closes it."),fake_wb:N("The five-hole is open right now. Shoot before he closes it."),fake_wg:N("The five-hole is open right now. Shoot before he closes it.")})},
  {id:"lean",n:4,title:"He leans to one side",rule:"He goes one way? Shoot the other way.",best:"Shoot far side",kid:"He leaned over to one side.",
   look:"Look at where his body is. He moved over to one side of the net.",lookAt:"body",
   why:"When a goalie leans or slides one way, he can't get back fast. The other side of the net is open. Shoot there right away.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
+  zones:["slot","wing"],routes:ROUTES,
   rate:c=>{const o=-c.lean,r={};const hi=o>0?"hg":"hb",mi=o>0?"mg":"mb",lo=o>0?"lg":"lb",nh=o>0?"hb":"hg",nm=o>0?"mb":"mg",nl=o>0?"lb":"lg";
     r[hi]=B("He leaned the other way. That side is wide open up high.");r[mi]=B("He leaned the other way. That side is open.");r[lo]=G("Low on the open side can go in too.");
     r[nh]=N("That's the side he leaned to.");r[nm]=N("That's the side he leaned to.");r[nl]=N("That's the side he leaned to.");r.fh=N("His pads are together.");
-    r.around_fh=N("He's leaning right now. Shoot the other way before he gets back.");r.around_bh=N("He's leaning right now. Shoot the other way before he gets back.");r.fake_bh=N("He's leaning right now. Shoot the other way before he gets back.");r.fake_across=N("He's leaning right now. Shoot the other way before he gets back.");return r}},
+    ROUTES.forEach(k=>r[k]=N("He's leaning right now. Shoot the other way before he gets back."));return r}},
  {id:"out",n:5,title:"He comes way out",rule:"He comes out? Go around him.",best:"Deke around him",kid:"He came way out of his net.",
   look:"Look how far he is from his net. He's way outside his crease.",lookAt:"body",
   why:"When he comes out, he blocks the shot, but he leaves the net behind him. Go around him on either side and slide the puck into the open net.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
-  rate:c=>({around_fh:B("He's way out. Go around him and the net is empty behind him."),around_bh:B("He's way out. Go around him and the net is empty behind him."),fake_across:G("A fake can work, but he's so far out that going around him is easier."),fake_bh:G("A fake, then a quick pull to your backhand can beat him, but going around him is easier when he's this far out."),
+  zones:["slot","wing"],routes:ROUTES,
+  rate:c=>({deke_bg:B("He's way out. Deke and go around him. The net is empty behind him."),deke_gb:B("He's way out. Deke and go around him. The net is empty behind him."),fake_wb:G("A fake can work, but he's so far out that going around him is easier."),fake_wg:G("A fake can work, but he's so far out that going around him is easier."),
     hg:N("He's close to you, so he covers the whole net from there."),hb:N("He's close to you, so he covers the whole net from there."),mg:N("He's close to you, so he covers the whole net from there."),mb:N("He's close to you, so he covers the whole net from there."),lg:N("He's close to you, so he covers the whole net from there."),lb:N("He's close to you, so he covers the whole net from there."),fh:N("He's close to you, so he covers the whole net from there.")})},
- {id:"set",n:6,title:"He stands tall and waits",rule:"He's set? Make him move first.",best:"Fake a shot, then carry across",kid:"He's set and waiting for you.",
+ {id:"set",n:6,title:"He stands tall and waits",rule:"He's set? Make him move first.",best:"Fake a shot, then go wide",kid:"He's set and waiting for you.",
   look:"Look at his feet. He's standing still, square to you, waiting for you to go first.",lookAt:"feet",
-  why:"A goalie who is set covers a lot. Fake a shot so he drops or leans, then carry the puck across. The wider you go, the more net opens up. Shooting too soon just puts the puck into him.",
-  zones:["slot","wing"],routes:["around_fh","around_bh","fake_bh","fake_across"],
-  rate:c=>({fake_across:B("He's waiting for you. Fake a shot to make him move, then carry it across and shoot into the open side."),fake_bh:G("Fake, then a quick pull to your backhand can work. Carrying it all the way across opens more net."),hg:G("Young goalies leave room up high even when they're set. A quick high shot can work."),hb:G("Young goalies leave room up high even when they're set. A quick high shot can work."),mb:G("Mid-height on the blocker side is a hard save."),
+  why:"A goalie who is set covers a lot. Fake a shot so he drops or leans, then carry the puck wide. The wider you go, the more net opens up. Shooting too soon just puts the puck into him.",
+  zones:["slot","wing"],routes:ROUTES,
+  rate:c=>({fake_wb:B("He's waiting for you. Fake a shot to make him move, then carry it wide and shoot into the open side."),fake_wg:B("He's waiting for you. Fake a shot to make him move, then carry it wide and shoot into the open side."),hg:G("Young goalies leave room up high even when they're set. A quick high shot can work."),hb:G("Young goalies leave room up high even when they're set. A quick high shot can work."),mb:G("Mid-height on the blocker side is a hard save."),
     mg:N("His glove is ready right there."),lg:N("When he's set, his pads cover the low corners."),lb:N("When he's set, his pads cover the low corners."),fh:N("His pads are together."),
-    around_fh:N("He's set. If you just go around, he slides with you. Make him move first."),around_bh:N("He's set. If you just go around, he slides with you. Make him move first.")})},
- {id:"post",n:7,title:"You're on a bad angle",rule:"Bad angle? Don't shoot into him. Carry it across.",best:"Carry it across the front",kid:"You're on a bad angle. He's on the post.",
+    deke_bg:N("He's set. If you just go around, he slides with you. Make him move first."),deke_gb:N("He's set. If you just go around, he slides with you. Make him move first.")})},
+ {id:"post",n:7,title:"You're on a bad angle",rule:"Bad angle? Don't shoot into him. Carry it across.",best:"Carry it across to the far side",kid:"You're on a bad angle. He's on the post.",
   look:"Look at the net. From here it looks tiny, and he's tight on the post.",lookAt:"post",
   why:"From a bad angle there is almost no net to shoot at. Carry the puck across the front of the net. He has to move with you, and the far side opens up. Then shoot.",
-  zones:["sharp"],routes:["across","fake_across"],
+  zones:["sharp"],routes:ROUTES,
   rate:c=>{const n=N("From here the net is tiny. Shooting just puts the puck into him."),r={hg:n,hb:n,mg:n,mb:n,lg:n,lb:n,fh:n};const nh=c.sx>0?"hg":"hb";r[nh]=G("A quick high shot can sneak over his shoulder, but it's a very small spot.");
-    r.across=B("Carry it across the front. He has to move with you, and the far side opens up.");r.fake_across=G("Faking can get him to move, then carry it across.");return r}}
+    const fr=farRoutes(c.sx);r[fr.far]=B("Carry it across the front. He has to move with you, and the far side opens up.");r[fr.farFake]=G("Faking can get him to move, then carry it across to the far side.");fr.near.forEach(k=>r[k]=N("That finishes on his side of the net. Go to the far side."));return r}},
+ {id:"behind",n:8,title:"Coming out from behind the net",rule:"Behind the net? Come out fast and read him again.",best:"Read him as you come out",kid:"You came out from behind the net.",
+  look:"Look at where he is as you come around the post. Is he on the post, deep, down, or set out front?",lookAt:"body",
+  why:"When you come from behind the net, the goalie has to find you again. Come out fast, look at him, and the read tells you the play: a post he's hugging means carry it across, a deep or dropped goalie gives you the net up high, a set goalie needs a fake first.",
+  zones:["behind"],routes:ROUTES,
+  rate:c=>LESSON[c.v||"post"].rate(c)}
 ];
 const LESSON={};LESSONS.forEach(l=>LESSON[l.id]=l);
+// numbered positions from the plan: 0 behind the net; rings 10s 5 ft, 20s 10 ft, 30s 15 ft, 40s 20 ft from goal centre; last digit 0..6 left to right, 3 straight on
+function POS(n){if(n===0)return[0,3.6];const ring=Math.floor(n/10),i=n%10,dist=ring*5,ang=(-90+i*30)*Math.PI/180;return[dist*Math.sin(ang),-dist*Math.cos(ang)]}
+// every rep from the Reps tab: [start, decide]. Behind-the-net reps carry a variant (what the goalie does) and the side he comes out
+const REPS={deep:[[43,23],[41,21],[45,25]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,10],[41,11],[45,15]],
+  behind:[[0,16,"post",1],[0,11,"post",-1],[0,13,"deep",1],[0,13,"drop",-1],[0,13,"set",1]]};
+function behindSpot(decide,sx){const S=POS(0);let E=POS(decide);if(decide===16||decide===11)E=[sx*4.8,-2.4];const path=[S,[sx*4.6,2.4],[sx*5.0,-.8],E];return{S,E,path}}
 const RANK={best:0,good:1,less:2},RLABEL={best:"Best read",good:"Good read",less:"Not this time"};
 function label(id){return SHOTNAME[id]||(ROUTE_STYLE[id]&&ROUTE_STYLE[id][1])||id}
 function fullRate(les,c){const r=les.rate(c),o={};SHOTS.forEach(k=>o[k]=r[k]||N("Not this time."));les.routes.forEach(k=>o[k]=r[k]||N("Not this time."));return o}
@@ -726,7 +740,7 @@ function chooseProb(r){return r==="best"?1:r==="good"?.5:.1}
 function stdPos(P,depth){const d=n2([P[0],P[1]]);let g=[d[0]*depth,d[1]*depth];if(g[1]>-.7)g[1]=-.7;g[0]=clamp(g[0],-2.6,2.6);return g}
 function cueAt(les,c,u){
   // returns {pos, pose} for progress u of the approach (0 far away, 1 at the decision point)
-  const Pt=l2(c.S,c.E,eo(u)),base=stdPos(Pt,3.2),k=c.k,st=POSE.stance;
+  const Pt=pathAt(c,u),base=stdPos(Pt,3.2),k=c.k,st=POSE.stance;
   const bob={...st,hip:[st.hip[0],st.hip[1],st.hip[2]+.03*Math.sin(u*14)]};
   switch(les.id){
     case "deep":return{pos:stdPos(Pt,.9),pose:POSE.deep,look:true};
@@ -737,7 +751,8 @@ function cueAt(les,c,u){
     case "set":return{pos:stdPos(Pt,3.4),pose:bob};
     case "post":return{pos:[c.sx*2.55,-.6],pose:postPose(c.sx)};
   }return{pos:base,pose:bob}}
-function goalieAt(ap,u){const c=ap.ctx,Pt=l2(ap.S,ap.E,eo(u)),cue=cueAt(LESSON[ap.les],c,u),G=cue.pos,fg=n2([Pt[0]-G[0],Pt[1]-G[1]]);return{P:Pt,G,fg,pose:cue.pose}}
+function pathAt(c,u){if(!c.path)return l2(c.S,c.E,eo(u));const pts=c.path,segs=[];let tot=0;for(let i=0;i<pts.length-1;i++){const l=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);segs.push(l);tot+=l}let d=eo(u)*tot;for(let i=0;i<segs.length;i++){if(d<=segs[i])return l2(pts[i],pts[i+1],segs[i]?d/segs[i]:0);d-=segs[i]}return pts[pts.length-1]}
+function goalieAt(ap,u){const c=ap.ctx,Pt=pathAt(c,u),cue=cueAt(effLes(ap.les,c),c,u),G=cue.pos,fg=n2([Pt[0]-G[0],Pt[1]-G[1]]);return{P:Pt,G,fg,pose:cue.pose}}
 function lookPoint(les,G,fg,k,c){const L=[-fg[1],fg[0]];const at=les.lookAt;const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
   if(at==="pads")return W(0,.4,.8);if(at==="feet")return W(0,0,.35);if(at==="glove")return W(1.08,.95,2.05);if(at==="fh")return W(0,.5,.55);if(at==="post")return[c.sx*3,0,1.6];return W(0,.3,2.5)}
 
@@ -745,17 +760,17 @@ function lookPoint(les,G,fg,k,c){const L=[-fg[1],fg[0]];const at=les.lookAt;cons
 function routePlan(id,E,hand,c){
   const h=hand==="L"?-1:1,f=n2([-E[0],-E[1]]),r=[f[1],-f[0]],fhV=[r[0]*h,r[1]*h],bhV=[-fhV[0],-fhV[1]];
   const sideSignX=v=>Math.sign(v[0]||1),sx=Math.abs(E[0])>.6?Math.sign(E[0]):0,far=-(sx||Math.sign(bhV[0]));
-  let side,finishY,wide,fakeT=null,puckSide,T,name;
-  if(id==="around_fh"||id==="around_bh"){side=id==="around_fh"?fhV:bhV;wide=3.9;finishY=-5.0;puckSide=id==="around_fh"?1:-1;const ps=sideSignX(side);T=[ps*2.35,.3,.5];name=ROUTE_STYLE[id][1]}
-  else if(id==="fake_across"){side=bhV;wide=4.6;finishY=-6.8;fakeT=.28;puckSide=-1;const ps=sideSignX(side);T=[ps*2.5,.3,1.1];name=ROUTE_STYLE[id][1]}
-  else if(id==="fake_bh"){side=bhV;wide=2.6;finishY=-5.2;fakeT=.3;puckSide=-1;const ps=sideSignX(side);T=[ps*2.35,.3,.5];name=ROUTE_STYLE[id][1]}
-  else{const fv=[far,0];side=fv;wide=Math.abs(E[0])+2.6;finishY=-6.5;puckSide=(fhV[0]*far>0)?1:-1;T=[far*2.4,.3,2.2];name=ROUTE_STYLE[id][1]}
+  // ends: glove side of the net is +x, blocker side is -x. side vectors are relative to the approach so the route works from any angle
+  const endX=(id==="fake_wb"||id==="deke_gb")?-1:1,firstX=id==="deke_bg"?-1:id==="deke_gb"?1:endX;
+  const vecTo=x=>sideSignX(fhV)===x?fhV:bhV,puckOf=v=>v===fhV?1:-1;
+  const side=vecTo(endX),first=vecTo(firstX),fakeT=(id==="fake_wb"||id==="fake_wg")?.28:null,puckSide=puckOf(side),firstPuck=puckOf(first);
+  const wide=fakeT!=null?3.6:3.3,finishY=fakeT!=null?-6.0:-5.4,T=[endX*2.35,.3,.5],name=ROUTE_STYLE[id][1];
   const dEnd=1.25,len=Math.hypot(E[0],E[1]);T[0]=clamp(T[0],-2.3,2.3);T[1]=.4;
-  const gy=c&&c.G?Math.hypot(c.G[0],c.G[1]):3.4,peakU=clamp(1-Math.sqrt(Math.max(0,1-(len-gy)/(len+finishY))),.35,.7);
-  const atRaw=t=>{const u=clamp(t/dEnd,0,1),fw=eo(u);let lat;if(id==="across")lat=sm(u);else if(fakeT!=null)lat=sm((u-.42)/.55);else lat=u<peakU?sm(u/peakU):1-.38*sm((u-peakU)/(1-peakU));
-    const P=[E[0]+f[0]*(Math.max(0,len+finishY))*fw+side[0]*wide*lat,E[1]+f[1]*(Math.max(0,len+finishY))*fw+side[1]*wide*lat];
-    if(id==="across"){P[0]=E[0]+(far*2.5-E[0])*sm(u);P[1]=E[1]+(finishY-E[1])*eo(u)}
-    const f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sd=id==="across"?puckSide:(fakeT!=null?(u<.5?1:-1):(id==="around_fh"?1:(u<.25?1:-1))),sdS=sd===1?1:-1;
+  const gy=c&&c.G?Math.hypot(c.G[0],c.G[1]):3.4;
+  const atRaw=t=>{const u=clamp(t/dEnd,0,1),fw=eo(u);let lat,lat1=0;
+    if(fakeT!=null)lat=sm((u-.42)/.55);else{lat1=u<.3?.9*sm(u/.3):.9*(1-sm((u-.3)/.3));lat=sm((u-.3)/.7)}
+    const P=[E[0]+f[0]*(Math.max(0,len+finishY))*fw+side[0]*wide*lat+first[0]*lat1,E[1]+f[1]*(Math.max(0,len+finishY))*fw+side[1]*wide*lat+first[1]*lat1];
+    const f2=n2([-P[0],-P[1]]),r2=[f2[1],-f2[0]],sd=fakeT!=null?(u<.5?1:puckSide):(u<.4?firstPuck:puckSide),sdS=sd===1?1:-1;
     const hs=hand==="L"?-1:1,latP=sdS===1?hs*1.75:-hs*1.25,wind=fakeT!=null?Math.sin(clamp((u-fakeT+.14)/.3,0,1)*Math.PI):0;
     return{P,side:sdS,windup:wind,pk:[P[0]+r2[0]*latP+f2[0]*3.0,P[1]+r2[1]*latP+f2[1]*3.0,.2]}};
   const at0=atRaw,fin=at0(dEnd).pk;
@@ -785,7 +800,7 @@ function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.03)
   if(marks.cues){drawCues(g,W,H,snap,marks.cues,marks.keyCue)}
   if(marks.ring){const p=projCam(W,H,marks.ring);if(p){const R=Math.max(24,W*.06);g.save();g.lineWidth=Math.max(4,W*.009);g.strokeStyle="#ffcf3a";g.shadowColor="rgba(0,0,0,.65)";g.shadowBlur=10;g.beginPath();g.arc(p[0],p[1],R,0,Math.PI*2);g.stroke();g.restore()}}}
 // ---- goalie cues: what to read on him, with a label and a leader line to the spot ----
-function goalieCues(snap){const G=snap.G,fg=snap.fg,p=snap.pose,k=snap.c.k,L=[-fg[1],fg[0]],les=LESSON[snap.c.les];const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
+function goalieCues(snap){const G=snap.G,fg=snap.fg,p=snap.pose,k=snap.c.k,L=[-fg[1],fg[0]],les=effLes(snap.c.les,snap.c);const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
   const depth=Math.hypot(G[0],G[1]),cues=[];
   const stance=p.bfly>.5?"Down in butterfly":les.id==="post"?"Standing on the post":"Standing";cues.push({id:"stance",name:"Stance",text:stance,at:W(0,.3,2.2),watch:p.bfly>.5,key:["drop"].includes(les.id)});
   const dTxt=depth<1.6?"On his goal line":depth<4.2?"Top of the crease":"Way out of his net";cues.push({id:"depth",name:"Depth",text:dTxt+` (${depth.toFixed(0)} ft out)`,at:W(0,0,.25),watch:depth<1.6||depth>4.2,key:["deep","out"].includes(les.id),depthLine:true});
@@ -826,7 +841,7 @@ $("#tLearn").onclick=()=>openLearn();$("#tPlay").onclick=()=>{const nx=LESSONS.f
 const THUMBS={};let thumbQ=[],thumbBusy=false;
 function queueThumb(les,img){const key=les.id+"|"+PR.goalieAge;if(THUMBS[key]){img.src=THUMBS[key];return}thumbQ.push([les,img,key]);if(!thumbBusy)runThumbs()}
 function runThumbs(){const job=thumbQ.shift();if(!job){thumbBusy=false;return}thumbBusy=true;setTimeout(()=>{try{const [les,img,key]=job;if(!THUMBS[key])THUMBS[key]=makeThumb(les);img.src=THUMBS[key]}catch(e){}runThumbs()},16)}
-function lessonCtx(les){const zone=les.zones[0],sx=1,k=GK[PR.goalieAge]||1;const E={slot:[1.5,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8]}[zone],S={slot:[2,-38],wing:[sx*24,-40],sharp:[sx*24,-14]}[zone];
+function lessonCtx(les){const zone=les.zones[0],sx=1,k=GK[PR.goalieAge]||1;if(zone==="behind"){const b=behindSpot(16,1);return{...b,sx:1,v:"post",k,lean:1,slide:false,les:"behind"}}const E={slot:[1.5,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8]}[zone],S={slot:[2,-38],wing:[sx*24,-40],sharp:[sx*24,-14]}[zone];
   return{S,E,sx,zone,k,lean:1,slide:false,les:les.id}}
 function makeThumb(les){const W=300,H=340,cv=document.createElement("canvas");cv.width=W;cv.height=H;const ctx=cv.getContext("2d");const c=lessonCtx(les),ap={S:c.S,E:c.E,ctx:c,les:les.id},gs=goalieAt(ap,1),G=gs.G,d=n2([gs.P[0]-G[0],gs.P[1]-G[1]]);
   renderView(ctx,W,H,{eye:[G[0]+d[0]*5.6,G[1]+d[1]*5.6,2.7],tgt:[G[0],G[1],1.9*c.k],G,fg:gs.fg,pose:gs.pose,k:c.k,look:gs.P});return cv.toDataURL("image/jpeg",.82)}
@@ -862,21 +877,19 @@ addEventListener("resize",()=>{resize();if(ST&&ST.mode==="decide")placeTargets()
 let ROUND=null,REP=null,ST=null,raf=0,last=0,wake=null;
 function releaseWake(){try{wake&&wake.release();wake=null}catch(e){}}
 function pool(){return LESSONS.filter(l=>PR.learned[l.id])}
-function mixedSeq(){const shots=["deep","drop","legs","lean"],moves=["out","set","post"];const pk=(a,n)=>a.slice().sort(()=>Math.random()-.5).slice(0,n);
-  let seq=pk(shots,3).concat(pk(moves,3));for(let t=0;t<20;t++){seq.sort(()=>Math.random()-.5);if(seq.every((x,i)=>!i||x!==seq[i-1]))break}return seq}
-function startRound(only,seq){if(!only&&!seq)seq=mixedSeq();const p=only?[LESSON[only]]:LESSONS;if(!p.length&&!seq)return;if(only){PR.learned[only]=true;save()}ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?3:6,results:[],last:null};
+function mixedSeq(){return LESSONS.map(l=>l.id).sort(()=>Math.random()-.5).slice(0,6)}
+function startRound(only,seq){if(!only&&!seq)seq=mixedSeq();const p=only?[LESSON[only]]:LESSONS;if(!p.length&&!seq)return;if(only){PR.learned[only]=true;save()}ROUND={only,pool:p,seq,i:0,count:seq?seq.length:only?REPS[only].length:6,results:[],last:null};
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
   show("game");resize();$("#hudName").textContent=PR.name;nextRep()}
 function weightOf(id){const s=PR.stats[id]||{best:0,good:0,less:0};return Math.max(.4,1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2))}
 function pickLesson(){let ids=ROUND.pool.map(l=>l.id);if(ids.length>1)ids=ids.filter(x=>x!==ROUND.last);const ws=ids.map(weightOf),t=ws.reduce((a,b)=>a+b,0);let r=Math.random()*t,id=ids[ids.length-1];for(let i=0;i<ids.length;i++){r-=ws[i];if(r<=0){id=ids[i];break}}ROUND.last=id;return LESSON[id]}
-function buildSpot(zone,sx){let S,E;
-  if(zone==="slot"){const th=rnd(3,16)*sx*Math.PI/180,r=14;E=[r*Math.sin(th),-r*Math.cos(th)];S=[E[0]*.4+sx*rnd(2,8),-38]}
-  else if(zone==="wing"){const th=rnd(28,44)*sx*Math.PI/180,r=15;E=[r*Math.sin(th),-r*Math.cos(th)];S=[sx*rnd(20,26),-40]}
-  else{const th=rnd(62,70)*sx*Math.PI/180,r=11;E=[r*Math.sin(th),-r*Math.cos(th)];S=[sx*25,-24]}
-  return{S,E}}
+function repSpot(les,idx){const list=REPS[les.id],rep=list[idx!=null&&idx<list.length?idx:Math.floor(Math.random()*list.length)];
+  if(les.id==="behind"){const sx=rep[3],v=rep[2];return{...behindSpot(rep[1],sx),sx,v,start:rep[0],decide:rep[1]}}
+  const S=POS(rep[0]),E=POS(rep[1]),sx=E[0]>.6?1:E[0]<-.6?-1:(Math.random()<.5?-1:1);return{S,E,sx,start:rep[0],decide:rep[1]}}
 function nextRep(){if(ROUND.i>=ROUND.count)return showSummary();ROUND.i++;$("#hudRep").textContent=`${ROUND.i} of ${ROUND.count}`;
-  const les=ROUND.seq?LESSON[ROUND.seq[ROUND.i-1]]:pickLesson(),zone=pick(les.zones),sx=Math.random()<.5?-1:1,{S,E}=buildSpot(zone,sx);
-  const ctx={S,E,sx,zone,k:GK[PR.goalieAge]||1,lean:Math.random()<.5?-1:1,slide:Math.random()<.5,les:les.id};
+  const les=ROUND.seq?LESSON[ROUND.seq[ROUND.i-1]]:pickLesson(),sp=repSpot(les,ROUND.only?ROUND.i-1:null),{S,E,sx}=sp;
+  const ctx={S,E,sx,path:sp.path,v:sp.v,start:sp.start,decide:sp.decide,k:GK[PR.goalieAge]||1,lean:Math.random()<.5?-1:1,slide:Math.random()<.5,les:les.id};
+  $("#hudRep").textContent=`${ROUND.i} of ${ROUND.count} · ${sp.start} → ${sp.decide}`;
   REP={decisions:[],result:null};startApproach({S,E,ctx,les:les.id,dur:SPEED[PR.speed||"medium"]})}
 function startApproach(ap){ST={mode:"approach",t:0,ap};hideUI();$("#prompt").hidden=false;$("#prompt").textContent="Watch the goalie";startLoop()}
 function hideUI(){$("#tapLayer").innerHTML="";$("#banner").hidden=true;$("#timer").hidden=true;$("#debrief").hidden=true;$("#prompt").hidden=true}
@@ -910,8 +923,8 @@ function placeTargets(){const s=ST,tl=$("#tapLayer");tl.innerHTML="";const v=fra
   SHOTS.forEach((id,i)=>{const b=document.createElement("button");b.className="tgt"+(sz<46?" sm":"");b.style.left=P[i][0]+"px";b.style.top=P[i][1]+"px";b.style.width=b.style.height=sz+"px";b.setAttribute("aria-label",label(id));b.innerHTML="<span></span>";b.querySelector("span").textContent={h:"High",m:"Mid",l:"Low",f:"Five-hole"}[id[0]];b.onclick=()=>choose(id);tl.appendChild(b)});
   s.plans=les.routes.map(id=>routePlan(id,gs.P,PR.shoots,{...s.ap.ctx,G:gs.G}));setCamera(three(),v.eye,null,W,H);
   const chips=s.plans.map((pl,n)=>{const i=Math.round(pl.route.length*(.4+.1*n)),p=projCam(W,H,[pl.route[i][0],pl.route[i][1],.03]);return{id:pl.id,name:pl.name,color:pl.color,x:p?p[0]/DPR:innerWidth/2,y:p?p[1]/DPR:innerHeight*.6}});
-  chips.sort((a,b)=>a.y-b.y);for(let i=1;i<chips.length;i++)for(let j=0;j<i;j++)if(Math.abs(chips[i].x-chips[j].x)<340&&Math.abs(chips[i].y-chips[j].y)<46)chips[i].y=chips[j].y+46;
-  chips.forEach(c=>{const b=document.createElement("button");b.className="rchip";b.style.left=clamp(c.x,150,innerWidth-150)+"px";b.style.top=clamp(c.y,80,innerHeight-40)+"px";b.style.borderColor=c.color;b.innerHTML=`<i style="background:${c.color}"></i><span></span>`;b.querySelector("span").textContent=c.name;b.onclick=()=>choose(c.id);tl.appendChild(b)})}
+  chips.forEach(c=>{c.x=clamp(c.x,130,innerWidth-130);c.y=clamp(c.y,80,innerHeight-120)});chips.sort((a,b)=>b.y-a.y);for(let i=1;i<chips.length;i++)for(let j=0;j<i;j++)if(Math.abs(chips[i].x-chips[j].x)<250&&Math.abs(chips[i].y-chips[j].y)<46)chips[i].y=chips[j].y-46;
+  chips.forEach(c=>{const b=document.createElement("button");b.className="rchip";b.style.left=c.x+"px";b.style.top=c.y+"px";b.style.borderColor=c.color;b.innerHTML=`<i style="background:${c.color}"></i><span></span>`;b.querySelector("span").textContent=ROUTE_STYLE[c.id][2]||c.name;b.onclick=()=>choose(c.id);tl.appendChild(b)})}
 function snapNow(){const gs=goalieAt(ST.ap,1);return{P:gs.P,G:gs.G,fg:gs.fg,pose:gs.pose,hand:PR.shoots,c:ST.ap.ctx}}
 // Where the puck is intercepted, in the goalie's frame (x = glove side, y = toward the shooter, z = up), and the pose that gets gear there
 function saveSpec(id,G,fg,k){const base=POSE.stance,L=[-fg[1],fg[0]];const toLocal=w=>{const d=[w[0]-G[0],w[1]-G[1]];return[d[0]*L[0]+d[1]*L[1],d[0]*fg[0]+d[1]*fg[1],w[2]]};
@@ -927,7 +940,7 @@ function saveWorld(G,fg,h){const L=[-fg[1],fg[0]];return[G[0]+L[0]*h[0]+fg[0]*h[
 function choose(id){const s=ST;if(s.mode!=="decide")return;const les=LESSON[s.ap.les],cx=s.ap.ctx,rates=fullRate(les,cx),ms=performance.now()-s.t0,r=id?rates[id][0]:"less";
   REP.decisions.push({les:les.id,ctx:cx,snap:snapNow(),ap:s.ap,choice:id,rates,r,ms,timeout:!id});
   $("#tapLayer").innerHTML="";$("#timer").hidden=true;$("#prompt").hidden=true;const gs=goalieAt(s.ap,1),goal=id?Math.random()<chooseProb(r):false;REP.result=goal?"goal":"save";
-  if(id&&ROUTES.includes(id)){const plan=routePlan(id,gs.P,PR.shoots,{...cx,G:gs.G});ST={mode:"deke",t:0,ap:s.ap,o:{plan,goal,G0:gs.G,pose0:gs.pose,down:id==="across"?POSE.butterfly:POSE.butterfly,d2:.45}};return}
+  if(id&&ROUTES.includes(id)){const plan=routePlan(id,gs.P,PR.shoots,{...cx,G:gs.G});ST={mode:"deke",t:0,ap:s.ap,o:{plan,goal,G0:gs.G,pose0:gs.pose,down:POSE.butterfly,d2:.45}};return}
   const T=id?(id==="fh"?[gs.G[0],gs.G[1]+.9,.25]:[TGT[id][0],.3,TGT[id][1]]):[gs.G[0],-.5,1.5];
   let G1=gs.G,pose1=gs.pose,hit=null;if(!goal){const sp=saveSpec(id,gs.G,gs.fg,cx.k);pose1=sp.pose;const shift=clamp((T[0]-gs.G[0])*.3,-.9,.9);G1=[gs.G[0]+shift,gs.G[1]];hit=saveWorld(G1,gs.fg,sp.hit)}
   ST={mode:"shot",t:0,ap:s.ap,o:{P:gs.P,from:bladeOf(gs.P,PR.shoots),T,goal,G0:gs.G,G1,pose0:gs.pose,pose1,hit,d:.5}}}
@@ -936,10 +949,10 @@ function banner(goal){const b=$("#banner");b.className=goal?"goal":"save";b.text
 /* ================= debrief ================= */
 let DBV=null;
 let dbLayer="plays",dbWhatIf=false;
-function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.decisions.length-1],les=LESSON[d.les];$("#banner").hidden=true;$("#debrief").hidden=false;dbWhatIf=false;
-  $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count}: ${les.title}`;const res=$("#dbResult");res.textContent=REP.result==="goal"?"Goal!":"Save";res.className="result "+REP.result;
+function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.decisions.length-1],les=effLes(d.les,d.ctx),fromBehind=d.les==="behind";$("#banner").hidden=true;$("#debrief").hidden=false;dbWhatIf=false;
+  $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count} · ${d.ctx.start} → ${d.ctx.decide}: ${fromBehind?LESSON.behind.title+" — "+les.title.toLowerCase():les.title}`;const res=$("#dbResult");res.textContent=REP.result==="goal"?"Goal!":"Save";res.className="result "+REP.result;
   const v=d.timeout?["less","Too slow this time"]:d.r==="best"?["best","Best read!"]:d.r==="good"?["good","Good read"]:["less","Try this one"];$("#dbVerdict").className="verdict "+v[0];$("#dbVerdict").textContent=v[1];
-  $("#dbKid").textContent=les.kid;$("#dbRule").textContent=les.rule;$("#dbBest").textContent="Best play: "+les.best;
+  $("#dbKid").textContent=(fromBehind?"You came out from behind the net. ":"")+les.kid;$("#dbRule").textContent=les.rule;$("#dbBest").textContent="Best play: "+les.best;
   const ids=Object.keys(d.rates).sort((a,b)=>RANK[d.rates[a][0]]-RANK[d.rates[b][0]]),tiles=$("#dbTiles"),why=$("#dbWhy");tiles.innerHTML="";
   const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=label(id)+": "+d.rates[id][1]};
   ids.forEach(id=>{const r=d.rates[id][0],b=document.createElement("button");b.className="ptile "+r;b.dataset.id=id;b.setAttribute("aria-pressed","false");b.innerHTML=`<i class="dot ${r}"></i><span></span>${id===d.choice?'<em class="you">YOU</em>':""}`;b.querySelector("span").textContent=label(id);b.onclick=()=>{stopVoice();clearLit();pickTile(id,b)};tiles.appendChild(b)});
@@ -949,15 +962,15 @@ function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.
   const wi=$("#dbWhatIf");wi.hidden=les.id==="post";wi.textContent=les.id==="set"?"What if he was deep?":"What if he was set?";
   viewMode="eyes";dbLayer="plays";setSeg($("#dbSeg"),viewMode);setSeg($("#dbLayer"),dbLayer);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"Next":"Next rep";$("#debrief").scrollTop=0;
   if(DB.coachAuto!==false)setTimeout(()=>{if(!$("#debrief").hidden)coachTalk(d)},300)}
-function whatIfSnap(d){const s=d.snap,les=LESSON[d.les];const alt=les.id==="set"?{G:stdPos(s.P,.9),pose:POSE.deep}:{G:stdPos(s.P,3.4),pose:POSE.stance};const fg=n2([s.P[0]-alt.G[0],s.P[1]-alt.G[1]]);return{...s,G:alt.G,fg,pose:alt.pose}}
+function whatIfSnap(d){const s=d.snap,les=effLes(d.les,d.ctx);const alt=les.id==="set"?{G:stdPos(s.P,.9),pose:POSE.deep}:{G:stdPos(s.P,3.4),pose:POSE.stance};const fg=n2([s.P[0]-alt.G[0],s.P[1]-alt.G[1]]);return{...s,G:alt.G,fg,pose:alt.pose}}
 function drawDebriefView(d){const cvd=$("#dbCv"),{W,H}=sizeCanvas(cvd),g2=cvd.getContext("2d"),s=dbWhatIf?whatIfSnap(d):d.snap,eye=[s.P[0],s.P[1],PR.eye],blade=bladeOf(s.P,s.hand),fromBlade=viewMode==="blade";
   renderView(g2,W,H,{eye:fromBlade?blade:eye,tgt:fromBlade?[0,.4,1.0]:null,G:s.G,fg:s.fg,pose:s.pose,k:s.c.k,look:eye,stick:!fromBlade,hand:s.hand,shadeFrom:fromBlade?blade:eye});
   const showPlays=dbLayer!=="cues",showCues=dbLayer!=="plays";
-  if(dbWhatIf){const alt=LESSON[d.les].id==="set"?LESSON.deep:LESSON.set;const rates=fullRate(alt,s.c);drawMarks(g2,W,H,s,{plays:showPlays,rates,chosen:null,cues:showCues?goalieCues({...s,c:{...s.c,les:alt.id}}):null,keyCue:null});$("#dbTag").textContent=(fromBlade?"Puck's eye":"My eyes")+", if he was "+(alt.id==="deep"?"deep":"set")}
+  if(dbWhatIf){const alt=effLes(d.les,d.ctx).id==="set"?LESSON.deep:LESSON.set;const rates=fullRate(alt,s.c);drawMarks(g2,W,H,s,{plays:showPlays,rates,chosen:null,cues:showCues?goalieCues({...s,c:{...s.c,les:alt.id}}):null,keyCue:null});$("#dbTag").textContent=(fromBlade?"Puck's eye":"My eyes")+", if he was "+(alt.id==="deep"?"deep":"set")}
   else{drawMarks(g2,W,H,s,{plays:showPlays,rates:d.rates,chosen:d.choice,cues:showCues?d.cues:null,keyCue:d.keyCue,ring:DBV&&DBV.ring?DBV.ring:null});$("#dbTag").textContent=fromBlade?"Puck's eye":"My eyes"}
   const pct=netPct(fromBlade?blade:eye,s);$("#dbNet").textContent=`${pct}% of the net is open from here`}
 $("#dbLayer").onclick=e=>{const b=e.target.closest("button");if(!b)return;dbLayer=b.dataset.v;setSeg($("#dbLayer"),dbLayer);drawDebriefView(REP.decisions[REP.decisions.length-1])};
-$("#dbWhatIf").onclick=()=>{stopVoice();dbWhatIf=!dbWhatIf;const d=REP.decisions[REP.decisions.length-1],les=LESSON[d.les];$("#dbWhatIf").textContent=dbWhatIf?"Back to this rep":(les.id==="set"?"What if he was deep?":"What if he was set?");drawDebriefView(d)};
+$("#dbWhatIf").onclick=()=>{stopVoice();dbWhatIf=!dbWhatIf;const d=REP.decisions[REP.decisions.length-1],les=effLes(d.les,d.ctx);$("#dbWhatIf").textContent=dbWhatIf?"Back to this rep":(les.id==="set"?"What if he was deep?":"What if he was set?");drawDebriefView(d)};
 $("#dbSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#dbSeg"),viewMode);drawDebriefView(REP.decisions[REP.decisions.length-1])};
 $("#dbCoach").onclick=()=>{if(VOICE.on)stopVoice();else coachTalk(REP.decisions[REP.decisions.length-1])};
 $("#dbReplay").onclick=()=>{stopVoice();const d=REP.decisions[REP.decisions.length-1];if(!REP.first)REP.first=d;$("#debrief").hidden=true;startApproach({...d.ap,dur:d.ap.dur*1.3});$("#prompt").textContent="Watch him again, then pick your play"};
@@ -972,7 +985,7 @@ document.addEventListener("click",()=>{if(VOICE.unlocked||!("speechSynthesis" in
 function voiceOn(){return DB.voice!==false&&"speechSynthesis" in window}
 function speak(text,done){if(voiceOn()){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.95;u.pitch=1.05;u.lang="en-US";let fired=false;const fin=()=>{if(fired)return;fired=true;clearTimeout(VOICE.safety);done&&done()};u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);VOICE.safety=setTimeout(fin,2500+text.length*85)}catch(e){done&&done()}}else{VOICE.safety=setTimeout(()=>done&&done(),1500+text.length*50)}}
 function stopVoice(){VOICE.on=false;clearTimeout(VOICE.timer);clearTimeout(VOICE.safety);try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}clearLit();DBV=null;const d=REP&&REP.decisions[REP.decisions.length-1];if(d&&!$("#debrief").hidden)drawDebriefView(d);const b=$("#dbCoach");if(b)b.textContent="Hear the coach"}
-function coachTalk(d){stopVoice();const les=LESSON[d.les],s=d.snap,best=d.marks.best,steps=[],key=d.cues.find(c=>c.id===d.keyCue);
+function coachTalk(d){stopVoice();const les=effLes(d.les,d.ctx),s=d.snap,best=d.marks.best,steps=[],key=d.cues.find(c=>c.id===d.keyCue);
   steps.push({text:`First, look at the goalie. ${key?key.name+": "+key.text+".":""} ${les.look}`,ring:key?key.at:lookPoint(les,s.G,s.fg,s.c.k,s.c),layer:"cues"});
   steps.push({text:`${les.rule} The green ${best.length>1?"spots are":"spot is"} the best play: ${best.map(k=>label(k).toLowerCase()).join(", ")}. ${d.rates[best[0]][1]}`,tiles:best,layer:"plays"});
   const good=Object.keys(d.rates).filter(k=>d.rates[k][0]==="good");if(good.length)steps.push({text:`Orange can work too: ${good.slice(0,2).map(k=>label(k).toLowerCase()).join(", ")}. Grey is not this time.`,tiles:good,layer:"plays"});
