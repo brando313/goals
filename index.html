@@ -496,32 +496,43 @@ function buildGoalie(envTex){
     // throat guard hanging under the chin
     const throat=new THREE.Mesh(new THREE.CylinderGeometry(.27,.31,.02,24,1,false,-1.0,2.0),std({color:"#1d2027",roughness:.4,transparent:true,opacity:.85,side:THREE.DoubleSide}));throat.rotation.x=.3;throat.position.set(0,.12,-.5);h.add(throat);
     h.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(h);R.head=h}
-  // catching glove, from the front like the CCM photo: a wide flat palm (fingers side), a thumb panel folded forward on a
-  // hinge along the outside edge, and the pocket of webbing as a flat oval in the top corner between them.
+  // catching glove: one leather shell folded around a vertical crease like a taco, open toward the shooter. The finger side is the
+  // big lobe nearest the body, the thumb side folds forward on the outside, and the laced pocket spans the notch at the top between them.
   // Local frame: +z toward the shooter (the open face), +y up, +x toward the thumb (away from the body).
   {const g=new THREE.Group(),cream=std({color:"#f4f2ec",roughness:.55,envMap:envTex,envMapIntensity:.2}),dark=std({color:"#2347a8",roughness:.6});
-    const skin=cTex(256,512,(c,w,h)=>{c.fillStyle="#f3f1ea";c.fillRect(0,0,w,h);for(let i=0;i<1400;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.08})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
-      c.fillStyle="#2347a8";c.beginPath();c.moveTo(0,h*.6);c.lineTo(w*.4,h*.6);c.lineTo(w*.15,h);c.lineTo(0,h);c.closePath();c.fill();c.strokeStyle="rgba(0,0,0,.2)";c.lineWidth=2;for(let y=.06;y<1;y+=.09){c.beginPath();c.moveTo(0,h*y);c.lineTo(w,h*y+14);c.stroke()}});
-    const mat=std({map:skin,roughness:.55,envMap:envTex,envMapIntensity:.2});
-    // palm: tall and wide, rounded, slightly cupped toward +z
-    const ps=new THREE.Shape();ps.moveTo(-.55,-.5);ps.lineTo(.3,-.5);ps.quadraticCurveTo(.42,-.5,.42,-.35);ps.lineTo(.42,.2);ps.quadraticCurveTo(.42,.6,.05,.66);ps.quadraticCurveTo(-.5,.66,-.6,.3);ps.lineTo(-.6,-.4);ps.quadraticCurveTo(-.6,-.5,-.55,-.5);
-    const pg=new THREE.ExtrudeGeometry(ps,{depth:.18,bevelEnabled:true,bevelThickness:.06,bevelSize:.06,bevelSegments:4,curveSegments:16});remapUV(pg);pg.translate(0,0,-.09);
-    {const p=pg.attributes.position;for(let k=0;k<p.count;k++){const x=p.getX(k),y=p.getY(k);p.setZ(k,p.getZ(k)+.12-.16*(x*x+.6*y*y))}pg.computeVertexNormals()}
-    g.add(new THREE.Mesh(pg,mat));
-    // thumb panel: hinged on the outside edge of the palm, folded forward toward the shooter
-    const ts=new THREE.Shape();ts.moveTo(0,-.42);ts.lineTo(.5,-.38);ts.quadraticCurveTo(.6,.0,.5,.4);ts.quadraticCurveTo(.4,.62,.05,.62);ts.lineTo(0,.6);ts.closePath();
-    const tg=new THREE.ExtrudeGeometry(ts,{depth:.16,bevelEnabled:true,bevelThickness:.05,bevelSize:.05,bevelSegments:4,curveSegments:14});remapUV(tg);tg.translate(0,0,-.08);
-    const thumb=new THREE.Mesh(tg,mat);thumb.position.set(.4,.02,.06);thumb.rotation.y=-.95;g.add(thumb);
-    // pocket: a flat oval of webbing in the top corner, spanning the gap between palm and thumb
-    const webTex=cTex(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle="#f7f6f2";c.lineWidth=7;for(let x=-96;x<w+96;x+=26){c.beginPath();c.moveTo(x,0);c.lineTo(x+96,h);c.stroke();c.beginPath();c.moveTo(x+96,0);c.lineTo(x,h);c.stroke()}});
-    const web=new THREE.Mesh(new THREE.CircleGeometry(.3,32),std({map:webTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:.9}));web.position.set(.33,.38,.22);web.rotation.y=-.5;web.scale.set(.75,1.15,1);g.add(web);
-    const lace=new THREE.Mesh(new THREE.TorusGeometry(.3,.022,8,36),std({color:"#f7f6f2",roughness:.8}));lace.position.copy(web.position);lace.rotation.copy(web.rotation);lace.scale.copy(web.scale);g.add(lace);
-    // finger rolls along the top of the palm
-    for(let i=0;i<4;i++){const f=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.2,4,10),cream);f.position.set(-.45+i*.2,.68,.0);f.rotation.z=Math.PI/2;g.add(f)}
-    // cuff block below, angled back
-    const cuff=new THREE.Mesh(rBoxGeo(.7,.4,.3,.08),cream);cuff.position.set(-.1,-.72,-.12);cuff.rotation.x=.3;g.add(cuff);
-    const band=new THREE.Mesh(rBoxGeo(.72,.08,.32,.03),dark);band.position.set(-.1,-.54,-.1);band.rotation.x=.3;g.add(band);
-    g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.glove=g}
+    const skin=cTex(512,512,(c,w,h)=>{c.fillStyle="#f3f1ea";c.fillRect(0,0,w,h);for(let i=0;i<2200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.08})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
+      // blue graphic on the lower finger side, red binding stripe up the thumb edge, stitched rows across the palm
+      c.fillStyle="#2347a8";c.beginPath();c.moveTo(0,h*.55);c.lineTo(w*.42,h*.62);c.lineTo(w*.3,h);c.lineTo(0,h);c.closePath();c.fill();
+      c.fillStyle="#c41f29";c.fillRect(w*.93,0,w*.07,h);c.fillStyle="#2347a8";c.fillRect(w*.44,h*.25,w*.05,h*.75);
+      c.strokeStyle="rgba(0,0,0,.18)";c.lineWidth=2;for(let y=.08;y<1;y+=.08){c.beginPath();c.moveTo(0,h*y);c.lineTo(w*.44,h*y);c.stroke();c.beginPath();c.moveTo(w*.49,h*y);c.lineTo(w,h*y+10);c.stroke()}
+      c.strokeStyle="rgba(0,0,0,.25)";c.setLineDash([6,5]);c.lineWidth=2;c.strokeRect(w*.03,h*.03,w*.94,h*.94);c.setLineDash([])});
+    const mat=std({map:skin,roughness:.5,envMap:envTex,envMapIntensity:.25});
+    // crease at x0: the thumb side (x > x0) rotates forward about the vertical line through the crease, the finger side curls forward a little, the top curls in
+    const x0=.1,fold=v=>{const sm=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)};let x=v.x,y=v.y,z=v.z;const a=x>x0?.9*sm((x-x0)/.6):-.45*sm((x0-x)/.75);
+      const dx=x-x0,c=Math.cos(a),s2=Math.sin(a);x=x0+dx*c-z*s2;z=dx*s2+z*c;if(y>.25){const t=(y-.25)/.5;z+=.22*t*t}v.x=x;v.y=y;v.z=z};
+    const bend=geo=>{const p=geo.attributes.position,v=new THREE.Vector3();for(let k=0;k<p.count;k++){v.set(p.getX(k),p.getY(k),p.getZ(k));fold(v);p.setXYZ(k,v.x,v.y,v.z)}geo.computeVertexNormals();return geo};
+    // the shell outline: heel at the bottom, wider at the top, with a V notch at the top for the pocket
+    const ps=new THREE.Shape();ps.moveTo(-.4,-.7);ps.lineTo(.38,-.7);ps.quadraticCurveTo(.66,-.66,.72,-.25);ps.lineTo(.8,.35);ps.quadraticCurveTo(.8,.8,.48,.82);ps.lineTo(.42,.82);ps.quadraticCurveTo(.3,.5,.16,.18);ps.quadraticCurveTo(.0,.5,-.12,.82);ps.lineTo(-.45,.82);ps.quadraticCurveTo(-.8,.8,-.8,.35);ps.lineTo(-.76,-.25);ps.quadraticCurveTo(-.7,-.68,-.4,-.7);
+    // the shell is built from a fine front plate, a back plate and a ribbon wall around the outline, so the fold stays smooth
+    const T=.2,front=new THREE.ShapeGeometry(ps,24);{const p=front.attributes.position;for(let k=0;k<p.count;k++)p.setZ(k,T/2)}remapUV(front);
+    const back=new THREE.ShapeGeometry(ps,24);{const p=back.attributes.position;for(let k=0;k<p.count;k++)p.setZ(k,-T/2);const idx=back.index.array;for(let k=0;k<idx.length;k+=3){const t=idx[k+1];idx[k+1]=idx[k+2];idx[k+2]=t}}remapUV(back);
+    const pts=ps.getPoints(24),wp=[],wu=[],wi=[];for(let k=0;k<pts.length;k++){const q=pts[k];wp.push(q.x,q.y,T/2,q.x,q.y,-T/2);wu.push(k/pts.length,1,k/pts.length,0);if(k){const b=2*k;wi.push(b-2,b,b-1,b,b+1,b-1)}}
+    const wall=new THREE.BufferGeometry();wall.setAttribute("position",new THREE.Float32BufferAttribute(wp,3));wall.setAttribute("uv",new THREE.Float32BufferAttribute(wu,2));wall.setIndex(wi);
+    const edge=std({color:"#ebe8e0",roughness:.6,side:THREE.DoubleSide});
+    g.add(new THREE.Mesh(bend(front),mat));g.add(new THREE.Mesh(bend(back),mat));g.add(new THREE.Mesh(bend(wall),edge));
+    // the pocket: laced webbing spanning the V notch and standing above the top edge, with a T lace down the middle
+    const webTex=cTex(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle="#f7f6f2";c.lineWidth=8;for(let x=-120;x<w+120;x+=30){c.beginPath();c.moveTo(x,0);c.lineTo(x+120,h);c.stroke();c.beginPath();c.moveTo(x+120,0);c.lineTo(x,h);c.stroke()}
+      c.lineWidth=14;c.beginPath();c.moveTo(w*.5,h*.1);c.lineTo(w*.5,h);c.stroke();c.beginPath();c.moveTo(w*.15,h*.12);c.lineTo(w*.85,h*.12);c.stroke();c.strokeStyle="#e9e6de";c.lineWidth=9;c.strokeRect(6,6,w-12,h-12)});
+    const ws=new THREE.Shape();ws.moveTo(-.14,.8);ws.lineTo(-.08,.92);ws.quadraticCurveTo(.15,1.0,.4,.92);ws.lineTo(.44,.8);ws.quadraticCurveTo(.3,.5,.16,.16);ws.quadraticCurveTo(.0,.5,-.14,.8);ws.closePath();
+    const web=new THREE.ShapeGeometry(ws,12);{const p=web.attributes.position;for(let k=0;k<p.count;k++)p.setZ(k,.0)}remapUV(web);
+    g.add(new THREE.Mesh(bend(web),std({map:webTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:.9})));
+    // thumb loop and finger-side break: two rounded ridges along the outer edges so the lobes read as padded
+    const ridge=(x,y,h,rz)=>{const m=new THREE.Mesh(new THREE.CapsuleGeometry(.07,h,4,10),cream);const v=new THREE.Vector3(x,y,.1);fold(v);m.position.copy(v);m.rotation.z=rz;g.add(m)};
+    ridge(.76,.05,.6,0);ridge(-.78,.05,.7,0);
+    // cuff block below the heel, angled back toward the arm, with the blue band
+    const cuff=new THREE.Mesh(rBoxGeo(.74,.42,.34,.08),cream);cuff.position.set(-.02,-.92,-.14);cuff.rotation.x=.3;g.add(cuff);
+    const band=new THREE.Mesh(rBoxGeo(.76,.09,.36,.03),dark);band.position.set(-.02,-.74,-.12);band.rotation.x=.3;g.add(band);
+    g.scale.set(.9,.82,.9);const go=new THREE.Group();go.add(g);g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(go);R.glove=go}
   // blocker: a flat rectangular board on the back of the hand. White face with a blue stripe panel, padded edge, glove underneath
   {const g=new THREE.Group();const bTex=cTex(256,384,(c,w,h)=>{c.translate(w,0);c.scale(-1,1);c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<1200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
     c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*.08,h*.04);c.lineTo(w*.4,h*.04);c.lineTo(w*.22,h*.96);c.lineTo(w*.08,h*.96);c.closePath();c.fill();c.fillStyle="#1a3480";c.fillRect(w*.08,h*.04,w*.05,h*.92);
