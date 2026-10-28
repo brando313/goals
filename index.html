@@ -80,6 +80,7 @@ p{margin:0;line-height:1.5}
 @media (max-width:820px){.split{grid-template-columns:minmax(0,1fr)}}
 .viewbox{background:#000;border-radius:16px;overflow:hidden;border:1px solid var(--line);position:relative}
 .viewbox canvas{display:block;width:100%;aspect-ratio:4/3;background:#111}
+#debrief .viewbox canvas{aspect-ratio:16/9;max-height:62vh;object-fit:cover}
 .vtag{position:absolute;left:10px;top:10px;background:rgba(10,16,30,.8);padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700}
 .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
 .seg button{flex:1;min-height:42px;border-radius:9px;font-weight:700;font-size:15px;color:var(--muted)}
@@ -123,10 +124,18 @@ p{margin:0;line-height:1.5}
 .legend{display:flex;gap:14px;font-size:15px;color:var(--muted);flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:6px}
 .dot{display:inline-block;width:13px;height:13px;border-radius:50%;flex:none}
-.dot.best{background:var(--open)}.dot.good{background:var(--blue)}.dot.less{background:#6d7a96}
-.ptiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dot.best{background:#45d483}.dot.good{background:#ff9f1a}.dot.less{background:#8a93a6}
+.dbbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.dbbar .seg{flex:1 1 220px}
+.dot.you{background:#fff}.dot.watch{background:var(--amber)}
+.cues{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cue{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.3}
+.cue b{min-width:92px;color:var(--muted);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;padding-top:2px}
+.cue.watch span{color:var(--amber);font-weight:700}
+.cue.key span{color:var(--best-fg);font-weight:700}
+.ptiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .ptile{min-height:54px;border-radius:12px;border:2px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:8px;padding:8px 10px;text-align:left;font-weight:700;font-size:15px;line-height:1.2}
-.ptile.best{border-color:#2f9e63}.ptile.good{border-color:#2c5aa8}
+.ptile.best{border-color:#2f9e63}.ptile.good{border-color:#c77a14}
 .ptile .you{margin-left:auto;font-size:11px;font-weight:800;background:var(--fg);color:var(--bg);padding:2px 7px;border-radius:999px}
 .ptile[aria-pressed="true"]{outline:3px solid var(--amber);outline-offset:1px}
 @keyframes litpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,207,58,0)}50%{box-shadow:0 0 0 6px rgba(255,207,58,.45)}}
@@ -231,27 +240,30 @@ p{margin:0;line-height:1.5}
   <div id="timer" hidden><i></i></div>
   <div id="debrief" hidden>
     <div class="wrap">
-      <div class="topbar"><div class="eyebrow" id="dbRep"></div><div class="result" id="dbResult"></div></div>
+      <div class="topbar"><div class="eyebrow" id="dbRep"></div><div class="row"><div class="verdict" id="dbVerdict" style="font-size:28px"></div><div class="result" id="dbResult"></div></div></div>
+      <div class="viewbox"><canvas id="dbCv"></canvas><span class="vtag" id="dbTag">My eyes</span><span class="vtag" id="dbNet" style="left:auto;right:10px"></span></div>
+      <div class="dbbar">
+        <div class="seg" id="dbSeg" role="group" aria-label="View"><button data-v="eyes" aria-pressed="true">My eyes</button><button data-v="blade" aria-pressed="false">Puck's eye</button></div>
+        <div class="seg" id="dbLayer" role="group" aria-label="Show"><button data-v="plays" aria-pressed="true">Plays</button><button data-v="cues" aria-pressed="false">Goalie cues</button><button data-v="both" aria-pressed="false">Both</button></div>
+        <button class="btn small" id="dbWhatIf">What if he was set?</button>
+        <button class="btn small" id="dbCoach">Hear the coach</button>
+      </div>
+      <div class="legend"><span><i class="dot best"></i>Best</span><span><i class="dot good"></i>Next best</span><span><i class="dot less"></i>Not this time</span><span><i class="dot you"></i>Your pick</span><span><i class="dot watch"></i>Watch this</span></div>
       <div class="split">
-        <div>
-          <div class="viewbox"><canvas id="dbCv"></canvas><span class="vtag" id="dbTag">My eyes</span></div>
-          <div class="seg" id="dbSeg" role="group" aria-label="View" style="margin-top:10px"><button data-v="eyes" aria-pressed="true">My eyes</button><button data-v="blade" aria-pressed="false">My stick blade</button></div>
-          <p class="caption" id="dbCap"></p>
-        </div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div class="row" style="justify-content:space-between;align-items:flex-start"><div class="verdict" id="dbVerdict"></div><button class="btn small" id="dbCoach">Hear the coach</button></div>
           <div class="kid" id="dbKid"></div>
           <div class="rulebox"><span>The rule</span><b id="dbRule"></b><i id="dbBest"></i></div>
-          <div class="legend"><span><i class="dot best"></i>Best</span><span><i class="dot good"></i>Good</span><span><i class="dot less"></i>Not this time</span></div>
-          <div class="ptiles" id="dbTiles"></div>
           <p class="why" id="dbWhy"></p>
           <div class="row"><button class="btn" id="dbReplay">Try again</button><button class="btn primary big" id="dbNext">Next rep</button></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="fact"><div class="k">What the goalie is giving you</div><div class="cues" id="dbCues"></div></div>
+          <div class="fact"><div class="k">Your plays, best to worst</div><div class="ptiles" id="dbTiles"></div></div>
+          <div class="fact" id="dbTimeBox"><div class="k">Your time</div><span id="dbTime"></span></div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
 <div id="summary" class="screen" hidden>
   <div class="wrap">
     <div class="eyebrow">Round complete</div>
@@ -484,27 +496,31 @@ function buildGoalie(envTex){
     // throat guard hanging under the chin
     const throat=new THREE.Mesh(new THREE.CylinderGeometry(.27,.31,.02,24,1,false,-1.0,2.0),std({color:"#1d2027",roughness:.4,transparent:true,opacity:.85,side:THREE.DoubleSide}));throat.rotation.x=.3;throat.position.set(0,.12,-.5);h.add(throat);
     h.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(h);R.head=h}
-  // catching glove, built open and facing +z (toward the shooter once posed): a cupped palm, a tall pocket of webbing between
-  // thumb and fingers on the outside edge, four finger rolls on top, a padded cuff below the wrist
-  {const g=new THREE.Group(),cream=std({color:"#f4f2ec",roughness:.55,envMap:envTex,envMapIntensity:.2}),blueM=std({color:"#2347a8",roughness:.6});
-    const palmTex=cTex(256,256,(c,w,h)=>{c.fillStyle="#f1efe8";c.fillRect(0,0,w,h);for(let i=0;i<900;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.08})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
-      c.strokeStyle="rgba(0,0,0,.18)";c.lineWidth=2;for(let y=.15;y<1;y+=.14){c.beginPath();c.moveTo(w*.1,h*y);c.lineTo(w*.9,h*y);c.stroke()}c.fillStyle="#2347a8";c.fillRect(w*.08,h*.82,w*.84,h*.06)});
-    // palm: a cupped slab. Shape in x (across) and y (up), extruded in z (toward the shooter)
-    const sh=new THREE.Shape();sh.moveTo(-.38,-.4);sh.quadraticCurveTo(-.52,-.1,-.44,.24);sh.quadraticCurveTo(-.36,.42,-.1,.44);sh.lineTo(.16,.42);sh.quadraticCurveTo(.44,.4,.44,.1);sh.quadraticCurveTo(.44,-.3,.2,-.44);sh.quadraticCurveTo(-.08,-.52,-.38,-.4);
-    const pg=new THREE.ExtrudeGeometry(sh,{depth:.14,bevelEnabled:true,bevelThickness:.07,bevelSize:.06,bevelSegments:5,curveSegments:18});remapUV(pg);pg.translate(0,0,-.07);
-    {const p=pg.attributes.position;for(let k=0;k<p.count;k++){const x=p.getX(k),y=p.getY(k);p.setZ(k,p.getZ(k)-.18*(x*x+y*y*.5))}pg.computeVertexNormals()}  // cup it toward the shooter
-    const palm=new THREE.Mesh(pg,std({map:palmTex,roughness:.55,envMap:envTex,envMapIntensity:.2}));g.add(palm);
-    // thumb: a thick roll on the inside edge, angled up
-    const thumb=new THREE.Mesh(new THREE.CapsuleGeometry(.1,.46,6,12),cream);thumb.position.set(-.46,.12,.04);thumb.rotation.z=.25;g.add(thumb);
-    // fingers: four rolls along the top, curling forward
-    for(let i=0;i<4;i++){const f=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.3,4,10),cream);f.position.set(-.15+i*.15,.5,.06);f.rotation.x=-.35;g.add(f)}
-    // pocket: webbing stretched between the thumb and the first finger, out past the palm edge, facing the shooter
-    const webTex=cTex(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle="#f7f6f2";c.lineWidth=6;for(let x=-80;x<w+80;x+=24){c.beginPath();c.moveTo(x,0);c.lineTo(x+80,h);c.stroke();c.beginPath();c.moveTo(x+80,0);c.lineTo(x,h);c.stroke()}});
-    const ws=new THREE.Shape();ws.moveTo(-.5,.18);ws.quadraticCurveTo(-.62,.5,-.42,.72);ws.quadraticCurveTo(-.22,.84,-.1,.6);ws.quadraticCurveTo(-.2,.4,-.3,.3);ws.closePath();
-    const web=new THREE.Mesh(new THREE.ShapeGeometry(ws,16),std({map:webTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:.9}));{const g2=web.geometry;remapUV(g2)}web.position.set(0,0,.08);g.add(web);
-    const rim=new THREE.Mesh(new THREE.TorusGeometry(.2,.03,8,24,Math.PI*1.1),cream);rim.position.set(-.34,.5,.08);rim.rotation.z=.9;g.add(rim);
-    // cuff and wrist band
-    const cuff=new THREE.Mesh(rBoxGeo(.46,.26,.3,.1),cream);cuff.position.set(.02,-.5,-.04);g.add(cuff);const band=new THREE.Mesh(rBoxGeo(.48,.06,.32,.03),blueM);band.position.set(.02,-.4,-.04);g.add(band);
+  // catching glove, from the front like the CCM photo: a wide flat palm (fingers side), a thumb panel folded forward on a
+  // hinge along the outside edge, and the pocket of webbing as a flat oval in the top corner between them.
+  // Local frame: +z toward the shooter (the open face), +y up, +x toward the thumb (away from the body).
+  {const g=new THREE.Group(),cream=std({color:"#f4f2ec",roughness:.55,envMap:envTex,envMapIntensity:.2}),dark=std({color:"#2347a8",roughness:.6});
+    const skin=cTex(256,512,(c,w,h)=>{c.fillStyle="#f3f1ea";c.fillRect(0,0,w,h);for(let i=0;i<1400;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.08})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
+      c.fillStyle="#2347a8";c.beginPath();c.moveTo(0,h*.6);c.lineTo(w*.4,h*.6);c.lineTo(w*.15,h);c.lineTo(0,h);c.closePath();c.fill();c.strokeStyle="rgba(0,0,0,.2)";c.lineWidth=2;for(let y=.06;y<1;y+=.09){c.beginPath();c.moveTo(0,h*y);c.lineTo(w,h*y+14);c.stroke()}});
+    const mat=std({map:skin,roughness:.55,envMap:envTex,envMapIntensity:.2});
+    // palm: tall and wide, rounded, slightly cupped toward +z
+    const ps=new THREE.Shape();ps.moveTo(-.55,-.5);ps.lineTo(.3,-.5);ps.quadraticCurveTo(.42,-.5,.42,-.35);ps.lineTo(.42,.2);ps.quadraticCurveTo(.42,.6,.05,.66);ps.quadraticCurveTo(-.5,.66,-.6,.3);ps.lineTo(-.6,-.4);ps.quadraticCurveTo(-.6,-.5,-.55,-.5);
+    const pg=new THREE.ExtrudeGeometry(ps,{depth:.18,bevelEnabled:true,bevelThickness:.06,bevelSize:.06,bevelSegments:4,curveSegments:16});remapUV(pg);pg.translate(0,0,-.09);
+    {const p=pg.attributes.position;for(let k=0;k<p.count;k++){const x=p.getX(k),y=p.getY(k);p.setZ(k,p.getZ(k)+.12-.16*(x*x+.6*y*y))}pg.computeVertexNormals()}
+    g.add(new THREE.Mesh(pg,mat));
+    // thumb panel: hinged on the outside edge of the palm, folded forward toward the shooter
+    const ts=new THREE.Shape();ts.moveTo(0,-.42);ts.lineTo(.5,-.38);ts.quadraticCurveTo(.6,.0,.5,.4);ts.quadraticCurveTo(.4,.62,.05,.62);ts.lineTo(0,.6);ts.closePath();
+    const tg=new THREE.ExtrudeGeometry(ts,{depth:.16,bevelEnabled:true,bevelThickness:.05,bevelSize:.05,bevelSegments:4,curveSegments:14});remapUV(tg);tg.translate(0,0,-.08);
+    const thumb=new THREE.Mesh(tg,mat);thumb.position.set(.4,.02,.06);thumb.rotation.y=-.95;g.add(thumb);
+    // pocket: a flat oval of webbing in the top corner, spanning the gap between palm and thumb
+    const webTex=cTex(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle="#f7f6f2";c.lineWidth=7;for(let x=-96;x<w+96;x+=26){c.beginPath();c.moveTo(x,0);c.lineTo(x+96,h);c.stroke();c.beginPath();c.moveTo(x+96,0);c.lineTo(x,h);c.stroke()}});
+    const web=new THREE.Mesh(new THREE.CircleGeometry(.3,32),std({map:webTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:.9}));web.position.set(.33,.38,.22);web.rotation.y=-.5;web.scale.set(.75,1.15,1);g.add(web);
+    const lace=new THREE.Mesh(new THREE.TorusGeometry(.3,.022,8,36),std({color:"#f7f6f2",roughness:.8}));lace.position.copy(web.position);lace.rotation.copy(web.rotation);lace.scale.copy(web.scale);g.add(lace);
+    // finger rolls along the top of the palm
+    for(let i=0;i<4;i++){const f=new THREE.Mesh(new THREE.CapsuleGeometry(.065,.2,4,10),cream);f.position.set(-.45+i*.2,.68,.0);f.rotation.z=Math.PI/2;g.add(f)}
+    // cuff block below, angled back
+    const cuff=new THREE.Mesh(rBoxGeo(.7,.4,.3,.08),cream);cuff.position.set(-.1,-.72,-.12);cuff.rotation.x=.3;g.add(cuff);
+    const band=new THREE.Mesh(rBoxGeo(.72,.08,.32,.03),dark);band.position.set(-.1,-.54,-.1);band.rotation.x=.3;g.add(band);
     g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.glove=g}
   // blocker: a flat rectangular board on the back of the hand. White face with a blue stripe panel, padded edge, glove underneath
   {const g=new THREE.Group();const bTex=cTex(256,384,(c,w,h)=>{c.translate(w,0);c.scale(-1,1);c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<1200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
@@ -558,7 +574,9 @@ function poseGoalie(R,G,fg,pose,look,k,wob){
     R.head.quaternion.setFromEuler(new THREE.Euler(clamp(pitch,-.5,.35),0,clamp(yaw,-.8,.8),"ZXY"))}
   // arms, glove, blocker
   const gl=V3(p.glove),bl=V3(p.blocker);gl.z+=bob*.6;bl.z+=bob*.6;
-  R.glove.position.copy(gl);R.glove.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(.9,-.3,.3).normalize(),new THREE.Vector3(.3,.1,.95).normalize(),new THREE.Vector3(-.3,-.95,.1).normalize()));
+  R.glove.position.copy(gl);{R.group.updateMatrixWorld(true);const gq=R.group.getWorldQuaternion(new THREE.Quaternion());const fwd=new THREE.Vector3(n.x,n.y,0).normalize(),side=new THREE.Vector3().crossVectors(fwd,Zup).normalize();
+    const zx=fwd.clone().multiplyScalar(.9).addScaledVector(side,.3).add(new THREE.Vector3(0,0,.25)).normalize(),yx0=new THREE.Vector3(0,0,1),xx=new THREE.Vector3().crossVectors(yx0,zx).normalize(),yx=new THREE.Vector3().crossVectors(zx,xx).normalize();
+    const wq=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xx,yx,zx));R.glove.quaternion.copy(gq.clone().invert().multiply(wq));if(R.group.scale.x<0){R.glove.scale.set(-1,1,1)}}
   R.blocker.position.copy(bl);R.blocker.quaternion.setFromUnitVectors(Zup,new THREE.Vector3(-.3,.92,.2).normalize());
   [[0,gl,1],[1,bl,-1]].forEach(([i,hand0,s])=>{const hand=hand0.clone().add(new THREE.Vector3(0,i===1?-.22:-.12,-.05));const a=R.arms[i],sh=shoulder[i],elbow=sh.clone().lerp(hand,.5).add(new THREE.Vector3(s*.28,-.05,-.3));
     segBetween(a.up,sh,elbow,1,1);segBetween(a.fore,elbow,hand,1,1);a.elbow.position.copy(elbow)});
@@ -753,14 +771,39 @@ function drawRoute(g,W,H,plan,color,opt){opt=opt||{};const pts=plan.route.map(p=
   if(plan.fakeAt){const fp=projCam(W,H,[plan.fakeAt[0],plan.fakeAt[1],.03]);if(fp){g.fillStyle="#fff";g.strokeStyle=color;g.lineWidth=3;g.beginPath();for(let i=0;i<16;i++){const an=i*Math.PI/8,rr=i%2?lw*1.2:lw*2.6;g.lineTo(fp[0]+Math.cos(an)*rr,fp[1]+Math.sin(an)*rr)}g.closePath();g.fill();g.stroke()}}
   g.restore();return pts}
 function targetWorld(id,G){if(id==="fh")return[G[0],G[1]+.55,.3];const t=TGT[id];return t?[t[0],.05,t[1]]:null}
-function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.03);
+const RCOL={best:"#45d483",good:"#ff9f1a",less:"#8a93a6"};
+function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.03),rates=marks.rates||{};
   const star=(x,y,R)=>{g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}g.closePath();g.fillStyle="#ffd34d";g.fill();g.lineWidth=2;g.strokeStyle="#5a4300";g.stroke()};
-  (marks.best||[]).filter(id=>ROUTES.includes(id)).forEach(id=>drawRoute(g,W,H,routePlan(id,snap.P,snap.hand,{...snap.c,G:snap.G}),"#45d483"));
-  if(marks.chosen&&ROUTES.includes(marks.chosen)&&!(marks.best||[]).includes(marks.chosen))drawRoute(g,W,H,routePlan(marks.chosen,snap.P,snap.hand,{...snap.c,G:snap.G}),"rgba(255,255,255,.8)",{thin:1});
-  (marks.best||[]).filter(id=>SHOTS.includes(id)).forEach(id=>{const w=targetWorld(id,snap.G),p=w&&projCam(W,H,w);if(!p)return;g.fillStyle="rgba(30,170,90,.35)";g.strokeStyle="#45d483";g.lineWidth=Math.max(3,r*.18);g.beginPath();g.arc(p[0],p[1],r,0,Math.PI*2);g.fill();g.stroke();star(p[0],p[1],r*.62)});
-  if(marks.chosen&&SHOTS.includes(marks.chosen)){const w=targetWorld(marks.chosen,snap.G),p=w&&projCam(W,H,w);if(p){g.save();g.setLineDash([6,5]);g.strokeStyle="#ffffff";g.lineWidth=Math.max(3,r*.16);g.beginPath();g.arc(p[0],p[1],r*1.25,0,Math.PI*2);g.stroke();g.restore();
-    const fs=Math.max(12,r*.75);g.font=`800 ${fs}px -apple-system,system-ui,sans-serif`;const tw=g.measureText("YOU").width;g.fillStyle="rgba(10,16,30,.9)";g.fillRect(p[0]-tw/2-6,p[1]-r*1.25-fs*1.5,tw+12,fs*1.35);g.fillStyle="#fff";g.textAlign="center";g.fillText("YOU",p[0],p[1]-r*1.25-fs*.45);g.textAlign="start"}}
+  const order=["less","good","best"];
+  if(marks.plays){
+    order.forEach(rk=>Object.keys(rates).filter(id=>ROUTES.includes(id)&&rates[id][0]===rk).forEach(id=>drawRoute(g,W,H,routePlan(id,snap.P,snap.hand,{...snap.c,G:snap.G}),RCOL[rk],{thin:rk==="less"})));
+    if(marks.chosen&&ROUTES.includes(marks.chosen))drawRoute(g,W,H,routePlan(marks.chosen,snap.P,snap.hand,{...snap.c,G:snap.G}),"rgba(255,255,255,.95)",{thin:1});
+    order.forEach(rk=>Object.keys(rates).filter(id=>SHOTS.includes(id)&&rates[id][0]===rk).forEach(id=>{const w=targetWorld(id,snap.G),p=w&&projCam(W,H,w);if(!p)return;const rr=rk==="less"?r*.7:r;
+      g.fillStyle=RCOL[rk]+(rk==="less"?"66":"88");g.strokeStyle=RCOL[rk];g.lineWidth=Math.max(2,rr*.16);g.beginPath();g.arc(p[0],p[1],rr,0,Math.PI*2);g.fill();g.stroke();if(rk==="best")star(p[0],p[1],rr*.6)}));
+    if(marks.chosen&&SHOTS.includes(marks.chosen)){const w=targetWorld(marks.chosen,snap.G),p=w&&projCam(W,H,w);if(p){g.save();g.strokeStyle="#ffffff";g.lineWidth=Math.max(3,r*.2);g.beginPath();g.arc(p[0],p[1],r*1.35,0,Math.PI*2);g.stroke();g.restore();
+      const fs=Math.max(12,r*.75);g.font=`800 ${fs}px -apple-system,system-ui,sans-serif`;const tw=g.measureText("YOU").width;g.fillStyle="rgba(10,16,30,.9)";g.fillRect(p[0]-tw/2-6,p[1]-r*1.35-fs*1.5,tw+12,fs*1.35);g.fillStyle="#fff";g.textAlign="center";g.fillText("YOU",p[0],p[1]-r*1.35-fs*.45);g.textAlign="start"}}}
+  if(marks.cues){drawCues(g,W,H,snap,marks.cues,marks.keyCue)}
   if(marks.ring){const p=projCam(W,H,marks.ring);if(p){const R=Math.max(24,W*.06);g.save();g.lineWidth=Math.max(4,W*.009);g.strokeStyle="#ffcf3a";g.shadowColor="rgba(0,0,0,.65)";g.shadowBlur=10;g.beginPath();g.arc(p[0],p[1],R,0,Math.PI*2);g.stroke();g.restore()}}}
+// ---- goalie cues: what to read on him, with a label and a leader line to the spot ----
+function goalieCues(snap){const G=snap.G,fg=snap.fg,p=snap.pose,k=snap.c.k,L=[-fg[1],fg[0]],les=LESSON[snap.c.les];const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
+  const depth=Math.hypot(G[0],G[1]),cues=[];
+  const stance=p.bfly>.5?"Down in butterfly":les.id==="post"?"Standing on the post":"Standing";cues.push({id:"stance",name:"Stance",text:stance,at:W(0,.3,2.2),watch:p.bfly>.5,key:["drop"].includes(les.id)});
+  const dTxt=depth<1.6?"On his goal line":depth<4.2?"Top of the crease":"Way out of his net";cues.push({id:"depth",name:"Depth",text:dTxt+` (${depth.toFixed(0)} ft out)`,at:W(0,0,.25),watch:depth<1.6||depth>4.2,key:["deep","out"].includes(les.id),depthLine:true});
+  const lat=G[0],ang=Math.atan2(Math.abs(snap.P[0]),Math.abs(snap.P[1]));const centeredOnShooter=Math.abs(lat-Math.sin(ang)*depth*Math.sign(snap.P[0]||1))<.9;const lTxt=Math.abs(lat)<.6?"Centered in his net":centeredOnShooter?"Lined up on you":`Over ${Math.max(1,Math.round(Math.abs(lat)))} ft toward his ${lat>0?"glove":"blocker"} side`;cues.push({id:"lateral",name:"Position",text:lTxt,at:W(0,-.2,.9),watch:Math.abs(lat)>=.6&&!centeredOnShooter,key:["lean","post"].includes(les.id),latLine:Math.abs(lat)>=.6&&!centeredOnShooter});
+  const legs=Math.abs(p.foot0[0]-p.foot1[0]);if(legs>2.0&&p.bfly<.5)cues.push({id:"legs",name:"Legs",text:"Wide open, five-hole showing",at:W(0,.45,.55),watch:true,key:les.id==="legs"});
+  if(p.glove[2]<1.6&&p.bfly<.5)cues.push({id:"glove",name:"Glove",text:"Held low, top corner open",at:W(p.glove[0],p.glove[1],p.glove[2]),watch:true,key:true});
+  if(p.blade[1]>1.8)cues.push({id:"stick",name:"Stick",text:"Reaching out, poke check coming",at:W(p.blade[0],p.blade[1],.2),watch:true,key:true});
+  if(les.id==="set")cues.push({id:"set",name:"Movement",text:"Set and still, waiting for you",at:W(0,.4,1.4),watch:false,key:true});
+  return cues}
+function drawCues(g,W,H,snap,cues,keyId){const fs=Math.max(12,W*.017),pad=7,th=fs*1.7,gap=8;g.save();g.font=`700 ${fs}px -apple-system,system-ui,sans-serif`;g.textBaseline="middle";
+  // labels stack down the left edge of the picture; a leader line runs from each label to its spot on the goalie
+  const items=cues.map(c=>({c,p:projCam(W,H,c.at)})).filter(x=>x.p).sort((a,b)=>a.p[1]-b.p[1]);
+  let y=H*.12;items.forEach(({c,p})=>{const col=c.key?"#45d483":c.watch?"#ffbf47":"#dfe6f2",txt=c.name+": "+c.text,tw=g.measureText(txt).width+pad*2,lx=10,ly=Math.max(y,Math.min(p[1]-th/2,H-th-10));y=ly+th+gap;
+    if(c.depthLine){const a=projCam(W,H,[snap.G[0],snap.G[1],.03]),b=projCam(W,H,[snap.G[0],0,.03]);if(a&&b){g.setLineDash([8,6]);g.strokeStyle=col;g.lineWidth=3;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}}
+    if(c.latLine){const a=projCam(W,H,[0,snap.G[1],.03]),b=projCam(W,H,[snap.G[0],snap.G[1],.03]);if(a&&b){g.strokeStyle=col;g.lineWidth=4;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}
+    g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(lx+tw,ly+th/2);g.lineTo(p[0],p[1]);g.stroke();g.fillStyle=col;g.beginPath();g.arc(p[0],p[1],5,0,Math.PI*2);g.fill();
+    g.fillStyle="rgba(9,14,26,.92)";g.fillRect(lx,ly,tw,th);g.strokeStyle=col;g.lineWidth=c.id===keyId?3:1.5;g.strokeRect(lx,ly,tw,th);g.fillStyle=c.id===keyId?col:"#fff";g.fillText(txt,lx+pad,ly+th/2)});g.restore()}
+function netPct(O,snap){poseGoalie(three().goalie,snap.G,snap.fg,snap.pose,O,snap.c.k,0);const g=openGrid3(O);let n=0;for(const v of g)if(v)n++;return Math.round(100*n/g.length)}
 
 /* ================= screens ================= */
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!==id);if(id!=="game"){stopLoop();releaseWake()}if(id!=="lesson")stopLessonLoop();stopVoice();window.scrollTo(0,0)}
@@ -803,7 +846,7 @@ function lessonFrame(now){if(!LES||$("#lesson").hidden)return;const cv=$("#lesCv
   const gs=goalieAt(LES.ap,u),c=LES.c,eye=[gs.P[0],gs.P[1],PR.eye],blade=bladeOf(gs.P,PR.shoots),fromBlade=viewMode==="blade"&&hold;
   renderView(g,W,H,{eye:fromBlade?blade:eye,tgt:fromBlade?[0,.4,1.0]:null,G:gs.G,fg:gs.fg,pose:gs.pose,k:c.k,look:eye,stick:!fromBlade,hand:PR.shoots,shadeFrom:hold?(fromBlade?blade:eye):null});
   $("#lesTag").textContent=fromBlade?"My stick blade":"My eyes";
-  if(hold){const snap={P:gs.P,G:gs.G,hand:PR.shoots,c};drawMarks(g,W,H,snap,{best:LES.best,ring:lookPoint(LES.les,gs.G,gs.fg,c.k,c)})}
+  if(hold){const snap={P:gs.P,G:gs.G,hand:PR.shoots,c};drawMarks(g,W,H,snap,{plays:true,rates:LES.rates,ring:lookPoint(LES.les,gs.G,gs.fg,c.k,c)})}
   lesRaf=requestAnimationFrame(lessonFrame)}
 function startLessonLoop(){cancelAnimationFrame(lesRaf);lesRaf=requestAnimationFrame(lessonFrame)}
 function stopLessonLoop(){cancelAnimationFrame(lesRaf);lesRaf=0}
@@ -892,21 +935,29 @@ function banner(goal){const b=$("#banner");b.className=goal?"goal":"save";b.text
 
 /* ================= debrief ================= */
 let DBV=null;
-function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.decisions.length-1],les=LESSON[d.les];$("#banner").hidden=true;$("#debrief").hidden=false;
-  $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count}`;const res=$("#dbResult");res.textContent=REP.result==="goal"?"Goal!":"Save";res.className="result "+REP.result;
+let dbLayer="plays",dbWhatIf=false;
+function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.decisions.length-1],les=LESSON[d.les];$("#banner").hidden=true;$("#debrief").hidden=false;dbWhatIf=false;
+  $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count}: ${les.title}`;const res=$("#dbResult");res.textContent=REP.result==="goal"?"Goal!":"Save";res.className="result "+REP.result;
   const v=d.timeout?["less","Too slow this time"]:d.r==="best"?["best","Best read!"]:d.r==="good"?["good","Good read"]:["less","Try this one"];$("#dbVerdict").className="verdict "+v[0];$("#dbVerdict").textContent=v[1];
   $("#dbKid").textContent=les.kid;$("#dbRule").textContent=les.rule;$("#dbBest").textContent="Best play: "+les.best;
   const ids=Object.keys(d.rates).sort((a,b)=>RANK[d.rates[a][0]]-RANK[d.rates[b][0]]),tiles=$("#dbTiles"),why=$("#dbWhy");tiles.innerHTML="";
-  const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=d.rates[id][1]};
+  const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=label(id)+": "+d.rates[id][1]};
   ids.forEach(id=>{const r=d.rates[id][0],b=document.createElement("button");b.className="ptile "+r;b.dataset.id=id;b.setAttribute("aria-pressed","false");b.innerHTML=`<i class="dot ${r}"></i><span></span>${id===d.choice?'<em class="you">YOU</em>':""}`;b.querySelector("span").textContent=label(id);b.onclick=()=>{stopVoice();clearLit();pickTile(id,b)};tiles.appendChild(b)});
-  const bestList=ids.filter(k=>d.rates[k][0]==="best");d.marks={best:bestList,chosen:d.choice};why.textContent=d.choice?d.rates[d.choice][1]:"Pick a play before the goalie gets set.";
-  viewMode="eyes";setSeg($("#dbSeg"),viewMode);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"Next":"Next rep";$("#debrief").scrollTop=0;
+  d.marks={best:ids.filter(k=>d.rates[k][0]==="best"),chosen:d.choice,rates:d.rates};why.textContent=d.choice?label(d.choice)+": "+d.rates[d.choice][1]:"Pick a play before the goalie gets set.";
+  d.cues=goalieCues(d.snap);d.keyCue=(d.cues.find(c=>c.key)||d.cues[0]).id;const cl=$("#dbCues");cl.innerHTML="";d.cues.forEach(c=>{const e=document.createElement("div");e.className="cue"+(c.id===d.keyCue?" key":c.watch?" watch":"");e.innerHTML="<b></b><span></span>";e.querySelector("b").textContent=c.name;e.querySelector("span").textContent=c.text+(c.id===d.keyCue?" (the one that matters here)":"");cl.appendChild(e)});
+  const secs=d.ms/1000;$("#dbTimeBox").hidden=!!d.timeout&&!PR.clockSec;$("#dbTime").textContent=d.timeout?"Time ran out. The goalie got set while you were thinking.":`${secs.toFixed(1)} seconds to pick.`+(secs>2.5?" A little quicker next time, before he gets set.":secs<1.2?" Fast. Nice.":"");
+  const wi=$("#dbWhatIf");wi.hidden=les.id==="post";wi.textContent=les.id==="set"?"What if he was deep?":"What if he was set?";
+  viewMode="eyes";dbLayer="plays";setSeg($("#dbSeg"),viewMode);setSeg($("#dbLayer"),dbLayer);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"Next":"Next rep";$("#debrief").scrollTop=0;
   if(DB.coachAuto!==false)setTimeout(()=>{if(!$("#debrief").hidden)coachTalk(d)},300)}
-function drawDebriefView(d){const cvd=$("#dbCv"),{W,H}=sizeCanvas(cvd),g2=cvd.getContext("2d"),s=d.snap,eye=[s.P[0],s.P[1],PR.eye],blade=bladeOf(s.P,s.hand),fromBlade=viewMode==="blade";
+function whatIfSnap(d){const s=d.snap,les=LESSON[d.les];const alt=les.id==="set"?{G:stdPos(s.P,.9),pose:POSE.deep}:{G:stdPos(s.P,3.4),pose:POSE.stance};const fg=n2([s.P[0]-alt.G[0],s.P[1]-alt.G[1]]);return{...s,G:alt.G,fg,pose:alt.pose}}
+function drawDebriefView(d){const cvd=$("#dbCv"),{W,H}=sizeCanvas(cvd),g2=cvd.getContext("2d"),s=dbWhatIf?whatIfSnap(d):d.snap,eye=[s.P[0],s.P[1],PR.eye],blade=bladeOf(s.P,s.hand),fromBlade=viewMode==="blade";
   renderView(g2,W,H,{eye:fromBlade?blade:eye,tgt:fromBlade?[0,.4,1.0]:null,G:s.G,fg:s.fg,pose:s.pose,k:s.c.k,look:eye,stick:!fromBlade,hand:s.hand,shadeFrom:fromBlade?blade:eye});
-  drawMarks(g2,W,H,s,{...d.marks,ring:DBV&&DBV.ring?DBV.ring:null});$("#dbTag").textContent=fromBlade?"My stick blade":"My eyes";
-  const e=openStats(openGrid3(eye)),b=openStats(openGrid3(blade));let cmp="";if(b.hi<e.hi-.08)cmp="Your stick blade sees less net up high than your eyes do.";else if(b.lo<e.lo-.08)cmp="Your stick blade sees less net down low than your eyes do.";else if(b.lo>e.lo+.08||b.hi>e.hi+.08)cmp="Your stick blade sees a little more net than your eyes do.";
-  $("#dbCap").textContent="Green is open net. Star is the best spot. "+cmp}
+  const showPlays=dbLayer!=="cues",showCues=dbLayer!=="plays";
+  if(dbWhatIf){const alt=LESSON[d.les].id==="set"?LESSON.deep:LESSON.set;const rates=fullRate(alt,s.c);drawMarks(g2,W,H,s,{plays:showPlays,rates,chosen:null,cues:showCues?goalieCues({...s,c:{...s.c,les:alt.id}}):null,keyCue:null});$("#dbTag").textContent=(fromBlade?"Puck's eye":"My eyes")+", if he was "+(alt.id==="deep"?"deep":"set")}
+  else{drawMarks(g2,W,H,s,{plays:showPlays,rates:d.rates,chosen:d.choice,cues:showCues?d.cues:null,keyCue:d.keyCue,ring:DBV&&DBV.ring?DBV.ring:null});$("#dbTag").textContent=fromBlade?"Puck's eye":"My eyes"}
+  const pct=netPct(fromBlade?blade:eye,s);$("#dbNet").textContent=`${pct}% of the net is open from here`}
+$("#dbLayer").onclick=e=>{const b=e.target.closest("button");if(!b)return;dbLayer=b.dataset.v;setSeg($("#dbLayer"),dbLayer);drawDebriefView(REP.decisions[REP.decisions.length-1])};
+$("#dbWhatIf").onclick=()=>{stopVoice();dbWhatIf=!dbWhatIf;const d=REP.decisions[REP.decisions.length-1],les=LESSON[d.les];$("#dbWhatIf").textContent=dbWhatIf?"Back to this rep":(les.id==="set"?"What if he was deep?":"What if he was set?");drawDebriefView(d)};
 $("#dbSeg").onclick=e=>{const b=e.target.closest("button");if(!b)return;viewMode=b.dataset.v;setSeg($("#dbSeg"),viewMode);drawDebriefView(REP.decisions[REP.decisions.length-1])};
 $("#dbCoach").onclick=()=>{if(VOICE.on)stopVoice();else coachTalk(REP.decisions[REP.decisions.length-1])};
 $("#dbReplay").onclick=()=>{stopVoice();const d=REP.decisions[REP.decisions.length-1];if(!REP.first)REP.first=d;$("#debrief").hidden=true;startApproach({...d.ap,dur:d.ap.dur*1.3});$("#prompt").textContent="Watch him again, then pick your play"};
@@ -921,13 +972,14 @@ document.addEventListener("click",()=>{if(VOICE.unlocked||!("speechSynthesis" in
 function voiceOn(){return DB.voice!==false&&"speechSynthesis" in window}
 function speak(text,done){if(voiceOn()){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.95;u.pitch=1.05;u.lang="en-US";let fired=false;const fin=()=>{if(fired)return;fired=true;clearTimeout(VOICE.safety);done&&done()};u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);VOICE.safety=setTimeout(fin,2500+text.length*85)}catch(e){done&&done()}}else{VOICE.safety=setTimeout(()=>done&&done(),1500+text.length*50)}}
 function stopVoice(){VOICE.on=false;clearTimeout(VOICE.timer);clearTimeout(VOICE.safety);try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}clearLit();DBV=null;const d=REP&&REP.decisions[REP.decisions.length-1];if(d&&!$("#debrief").hidden)drawDebriefView(d);const b=$("#dbCoach");if(b)b.textContent="Hear the coach"}
-function coachTalk(d){stopVoice();const les=LESSON[d.les],s=d.snap,best=d.marks.best,steps=[];
-  steps.push({text:les.look,ring:lookPoint(les,s.G,s.fg,s.c.k,s.c)});
-  steps.push({text:`${les.rule} ${d.rates[best[0]][1]}`,tiles:best});
-  if(d.choice&&d.r!=="best")steps.push({text:`You picked ${label(d.choice).toLowerCase()}. ${d.rates[d.choice][1]}`,tiles:[d.choice]});
-  steps.push({text:d.r==="best"?"That was the best read. Nice job!":d.r==="good"?"Good read. Next time, try the best play.":d.timeout?"Look at the goalie early, then pick fast.":"Next time, look at the goalie first, then "+les.rule.split("?").pop().trim().replace(/\.$/,"").toLowerCase()+"."});
-  VOICE.on=true;$("#dbCoach").textContent="Stop the coach";let i=0;const next=()=>{if(!VOICE.on)return;if(i>=steps.length){VOICE.on=false;clearLit();DBV=null;drawDebriefView(d);$("#dbCoach").textContent="Hear the coach again";return}
-    const st=steps[i++];clearLit();(st.tiles||[]).forEach(id=>{const t=document.querySelector(`.ptile[data-id="${id}"]`);if(t)t.classList.add("lit")});$("#dbWhy").textContent=st.text;DBV={ring:st.ring||null};drawDebriefView(d);speak(st.text,()=>{VOICE.timer=setTimeout(next,450)})};next()}
+function coachTalk(d){stopVoice();const les=LESSON[d.les],s=d.snap,best=d.marks.best,steps=[],key=d.cues.find(c=>c.id===d.keyCue);
+  steps.push({text:`First, look at the goalie. ${key?key.name+": "+key.text+".":""} ${les.look}`,ring:key?key.at:lookPoint(les,s.G,s.fg,s.c.k,s.c),layer:"cues"});
+  steps.push({text:`${les.rule} The green ${best.length>1?"spots are":"spot is"} the best play: ${best.map(k=>label(k).toLowerCase()).join(", ")}. ${d.rates[best[0]][1]}`,tiles:best,layer:"plays"});
+  const good=Object.keys(d.rates).filter(k=>d.rates[k][0]==="good");if(good.length)steps.push({text:`Orange can work too: ${good.slice(0,2).map(k=>label(k).toLowerCase()).join(", ")}. Grey is not this time.`,tiles:good,layer:"plays"});
+  if(d.choice&&d.r!=="best")steps.push({text:`You picked ${label(d.choice).toLowerCase()}, the white ring. ${d.rates[d.choice][1]}`,tiles:[d.choice],layer:"plays"});
+  steps.push({text:d.r==="best"?"That was the best read. Nice job!":d.r==="good"?"Good read. Next time, go green.":d.timeout?"Look at the goalie early, then pick fast.":"Next time, look at the goalie first, then "+les.rule.split("?").pop().trim().replace(/\.$/,"").toLowerCase()+".",layer:"both"});
+  VOICE.on=true;$("#dbCoach").textContent="Stop the coach";let i=0;const next=()=>{if(!VOICE.on)return;if(i>=steps.length){VOICE.on=false;clearLit();DBV=null;dbLayer="both";setSeg($("#dbLayer"),dbLayer);drawDebriefView(d);$("#dbCoach").textContent="Hear the coach again";return}
+    const st=steps[i++];clearLit();(st.tiles||[]).forEach(id=>{const t=document.querySelector(`.ptile[data-id="${id}"]`);if(t)t.classList.add("lit")});$("#dbWhy").textContent=st.text;DBV={ring:st.ring||null};if(st.layer){dbLayer=st.layer;setSeg($("#dbLayer"),dbLayer)}drawDebriefView(d);speak(st.text,()=>{VOICE.timer=setTimeout(next,450)})};next()}
 
 /* ================= summary, stars, settings ================= */
 function roundIndex(){return ROUND&&ROUND.only?LESSONS.findIndex(l=>l.id===ROUND.only):-1}
