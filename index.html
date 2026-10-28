@@ -518,7 +518,11 @@ function buildGoalie(envTex){
     // cage frame
     {const pts=[];for(let a=0;a<=Math.PI*2+.01;a+=Math.PI/24){const sa=Math.sin(a);const ax=Math.cos(a)*(sa>0?.84:.7),az=sa*(sa>0?.5:.62)-.06;pts.push(onShell(ax,az))}const curve=new THREE.CatmullRomCurve3(pts,true);h.add(new THREE.Mesh(new THREE.TubeGeometry(curve,64,.02,8,true),std({color:"#1a1a1c",roughness:.4,metalness:.4})))}
     // throat guard hanging under the chin
-    const throat=new THREE.Mesh(new THREE.CylinderGeometry(.27,.31,.02,24,1,false,-1.0,2.0),std({color:"#1d2027",roughness:.4,transparent:true,opacity:.85,side:THREE.DoubleSide}));throat.rotation.x=.3;throat.position.set(0,.12,-.5);h.add(throat);
+    // dangler: a clear lexan plate hanging from the chin on two cords
+    {const ds=new THREE.Shape();ds.moveTo(-.3,0);ds.lineTo(.3,0);ds.lineTo(.26,-.26);ds.quadraticCurveTo(0,-.36,-.26,-.26);ds.closePath();
+      const dg=new THREE.ShapeGeometry(ds,10);const dm=std({color:"#cfd6e0",roughness:.08,metalness:.1,transparent:true,opacity:.35,envMap:envTex,envMapIntensity:1.2,side:THREE.DoubleSide});
+      const dang=new THREE.Mesh(dg,dm);dang.rotation.x=Math.PI/2-.12;dang.position.set(0,.22,-.36);h.add(dang);
+      for(const x of [-.22,.22]){const cord=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.14,6),std({color:"#111"}));cord.position.set(x,.2,-.33);cord.rotation.x=.1;h.add(cord)}}
     h.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(h);R.head=h}
   // catching glove: one leather shell folded around a vertical crease like a taco, open toward the shooter. The finger side is the
   // big lobe nearest the body, the thumb side folds forward on the outside, and the laced pocket spans the notch at the top between them.
