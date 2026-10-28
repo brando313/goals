@@ -777,7 +777,9 @@ const PLAY_ID={"high glove":"hg","mid glove":"mg","low glove":"lg","high blocker
 function playId(n){return PLAY_ID[String(n).trim().toLowerCase()]||n}
 const REPS={deep:[[43,23,null,null,["High Glove"]],[41,21,null,null,["Fake Shot, wide glove side","Deke to blocker, go wide glove side"]],[45,25,null,null,["Fake Shot, wide blocker side","Deke to glove, go wide blocker side"]]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,20],[41,21],[45,25]],
   behind:[[0,16,"post",1],[0,11,"post",-1],[0,23,"deep",1],[0,23,"drop",-1],[0,23,"set",1]]};
-function behindSpot(decide,sx){const S=POS(0);let E=POS(decide);if(decide===16||decide===11)E=[sx*4.8,-2.4];const path=[S,[sx*4.6,2.4],[sx*5.0,-.8],E];return{S,E,path}}
+// the wrap goes wide around the post: out past the trapezoid corner, then swings in toward the decide spot so it never runs into the goalie
+function behindSpot(decide,sx){const S=POS(0);let E=POS(decide);const atPost=decide===16||decide===11;if(atPost)E=[sx*4.8,-2.4];
+  const path=atPost?[S,[sx*5.2,2.8],[sx*6.6,-.4],E]:[S,[sx*5.4,3.0],[sx*8.2,-1.2],[sx*8.6,-6.0],E];return{S,E,path}}
 const RANK={best:0,good:1,less:2},RLABEL={best:"Best read",good:"Good read",less:"Not this time"};
 function label(id){return SHOTNAME[id]||(ROUTE_STYLE[id]&&ROUTE_STYLE[id][1])||id}
 function fullRate(les,c){const r=les.rate(c),o={};SHOTS.forEach(k=>o[k]=r[k]||N("Not this time."));les.routes.forEach(k=>o[k]=r[k]||N("Not this time."));
