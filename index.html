@@ -744,7 +744,7 @@ const LESSONS=[
     r[nh]=N("That's the side he leaned to.");r[nm]=N("That's the side he leaned to.");r[nl]=N("That's the side he leaned to.");r.fh=N("His pads are together.");
     ROUTES.forEach(k=>r[k]=N("He's leaning right now. Shoot the other way before he gets back."));return r}},
  {id:"out",n:5,title:"He comes way out",rule:"He comes out? Go around him.",best:"Deke around him",kid:"He came way out of his net.",
-  look:"Look how far he is from his net. He's way outside his crease.",lookAt:"body",
+  look:"Look how far he is from his net. He's out in the middle of his crease, well off his line.",lookAt:"body",
   why:"When he comes out, he blocks the shot, but he leaves the net behind him. Go around him on either side and slide the puck into the open net.",
   zones:["slot","wing"],routes:ROUTES,
   rate:c=>({deke_bg:B("He's way out. Deke and go around him. The net is empty behind him."),deke_gb:B("He's way out. Deke and go around him. The net is empty behind him."),fake_wb:G("A fake can work, but he's so far out that going around him is easier."),fake_wg:G("A fake can work, but he's so far out that going around him is easier."),
@@ -788,18 +788,20 @@ function fullRate(les,c){const r=les.rate(c),o={};SHOTS.forEach(k=>o[k]=r[k]||N(
 function chooseProb(r){return r==="best"?1:r==="good"?.5:.1}
 
 /* ================= goalie behaviour during the approach ================= */
+// "way out" means the middle of the crease, and never closer than 6 ft to the shooter
+function outDepth(P){return clamp(Math.hypot(P[0],P[1])-6,3.0,3.8)}
 function stdPos(P,depth){const d=n2([P[0],P[1]]);let g=[d[0]*depth,d[1]*depth];if(g[1]>-.7)g[1]=-.7;g[0]=clamp(g[0],-2.6,2.6);return g}
 function cueAt(les,c,u){
   // returns {pos, pose} for progress u of the approach (0 far away, 1 at the decision point)
-  const Pt=pathAt(c,u),base=stdPos(Pt,3.2),k=c.k,st=POSE.stance;
+  const Pt=pathAt(c,u),base=stdPos(Pt,2.0),k=c.k,st=POSE.stance;
   const bob={...st,hip:[st.hip[0],st.hip[1],st.hip[2]+.03*Math.sin(u*14)]};
   switch(les.id){
     case "deep":return{pos:stdPos(Pt,.9),pose:POSE.deep,look:true};
     case "drop":{const a=sm((u-.55)/.25);return{pos:base,pose:lerpPose(bob,POSE.butterfly,a)}}
     case "legs":{const a=sm((u-.5)/.25);return{pos:base,pose:lerpPose(bob,POSE.legs,a)}}
     case "lean":{const a=sm((u-.45)/.35);const from=c.slide?[base[0]-c.lean*1.4,base[1]]:base;const to=[clamp(base[0]+c.lean*1.15,-2.5,2.5),base[1]];const tp={...bob,tilt:.22*a,glove:[bob.glove[0]+.25*a,bob.glove[1],bob.glove[2]],hip:[bob.hip[0]+.12*a,bob.hip[1],bob.hip[2]]};const pose=c.lean>0?tp:mirrorPose({...tp});return{pos:l2(from,to,a),pose}}
-    case "out":{const a=sm((u-.3)/.45);const far=stdPos(Pt,7.2);return{pos:l2(base,far,a),pose:lerpPose(bob,POSE.deep,.3)}}
-    case "set":return{pos:stdPos(Pt,3.4),pose:bob};
+    case "out":{const a=sm((u-.3)/.45);const far=stdPos(Pt,outDepth(Pt));return{pos:l2(base,far,a),pose:lerpPose(bob,POSE.deep,.3)}}
+    case "set":return{pos:stdPos(Pt,2.2),pose:bob};
     case "post":return{pos:[c.sx*2.55,-.6],pose:postPose(c.sx)};
   }return{pos:base,pose:bob}}
 function pathAt(c,u){if(!c.path)return l2(c.S,c.E,eo(u));const pts=c.path,segs=[];let tot=0;for(let i=0;i<pts.length-1;i++){const l=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);segs.push(l);tot+=l}let d=eo(u)*tot;for(let i=0;i<segs.length;i++){if(d<=segs[i])return l2(pts[i],pts[i+1],segs[i]?d/segs[i]:0);d-=segs[i]}return pts[pts.length-1]}
@@ -854,7 +856,7 @@ function drawMarks(g,W,H,snap,marks){if(!marks)return;const r=Math.max(13,W*.03)
 function goalieCues(snap){const G=snap.G,fg=snap.fg,p=snap.pose,k=snap.c.k,L=[-fg[1],fg[0]],les=effLes(snap.c.les,snap.c);const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
   const depth=Math.hypot(G[0],G[1]),cues=[];
   const stance=p.bfly>.5?"Down in butterfly":les.id==="post"?"Standing on the post":"Standing";cues.push({id:"stance",name:"Stance",text:stance,at:W(0,.3,2.2),watch:p.bfly>.5,key:["drop"].includes(les.id)});
-  const dTxt=depth<1.6?"On his goal line":depth<4.2?"Top of the crease":"Way out of his net";cues.push({id:"depth",name:"Depth",text:dTxt+` (${depth.toFixed(0)} ft out)`,at:W(0,0,.25),watch:depth<1.6||depth>4.2,key:["deep","out"].includes(les.id),depthLine:true});
+  const dTxt=depth<1.5?"On his goal line":depth<2.8?"Just off his line":"Out in the middle of his crease";cues.push({id:"depth",name:"Depth",text:dTxt+` (${depth.toFixed(0)} ft out)`,at:W(0,0,.25),watch:depth<1.5||depth>2.8,key:["deep","out"].includes(les.id),depthLine:true});
   const lat=G[0],ang=Math.atan2(Math.abs(snap.P[0]),Math.abs(snap.P[1]));const centeredOnShooter=Math.abs(lat-Math.sin(ang)*depth*Math.sign(snap.P[0]||1))<.9;const lTxt=Math.abs(lat)<.6?"Centered in his net":centeredOnShooter?"Lined up on you":`Over ${Math.max(1,Math.round(Math.abs(lat)))} ft toward his ${lat>0?"glove":"blocker"} side`;cues.push({id:"lateral",name:"Position",text:lTxt,at:W(0,-.2,.9),watch:Math.abs(lat)>=.6&&!centeredOnShooter,key:["lean","post"].includes(les.id),latLine:Math.abs(lat)>=.6&&!centeredOnShooter});
   const legs=Math.abs(p.foot0[0]-p.foot1[0]);if(legs>2.0&&p.bfly<.5)cues.push({id:"legs",name:"Legs",text:"Wide open, five-hole showing",at:W(0,.45,.55),watch:true,key:les.id==="legs"});
   if(p.glove[2]<1.6&&p.bfly<.5)cues.push({id:"glove",name:"Glove",text:"Held low, top corner open",at:W(p.glove[0],p.glove[1],p.glove[2]),watch:true,key:true});
@@ -1014,7 +1016,7 @@ function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.
   const wi=$("#dbWhatIf");wi.hidden=les.id==="post";wi.textContent=les.id==="set"?"What if he was deep?":"What if he was set?";
   viewMode="eyes";dbLayer="plays";setSeg($("#dbSeg"),viewMode);setSeg($("#dbLayer"),dbLayer);drawDebriefView(d);$("#dbNext").textContent=ROUND.i>=ROUND.count?"Next":"Next rep";$("#debrief").scrollTop=0;
   if(DB.coachAuto!==false)setTimeout(()=>{if(!$("#debrief").hidden)coachTalk(d)},300)}
-function whatIfSnap(d){const s=d.snap,les=effLes(d.les,d.ctx);const alt=les.id==="set"?{G:stdPos(s.P,.9),pose:POSE.deep}:{G:stdPos(s.P,3.4),pose:POSE.stance};const fg=n2([s.P[0]-alt.G[0],s.P[1]-alt.G[1]]);return{...s,G:alt.G,fg,pose:alt.pose}}
+function whatIfSnap(d){const s=d.snap,les=effLes(d.les,d.ctx);const alt=les.id==="set"?{G:stdPos(s.P,.9),pose:POSE.deep}:{G:stdPos(s.P,2.2),pose:POSE.stance};const fg=n2([s.P[0]-alt.G[0],s.P[1]-alt.G[1]]);return{...s,G:alt.G,fg,pose:alt.pose}}
 function drawDebriefView(d){const cvd=$("#dbCv"),{W,H}=sizeCanvas(cvd),g2=cvd.getContext("2d"),s=dbWhatIf?whatIfSnap(d):d.snap,eye=[s.P[0],s.P[1],PR.eye],blade=bladeOf(s.P,s.hand),fromBlade=viewMode==="blade";
   renderView(g2,W,H,{eye:fromBlade?blade:eye,tgt:fromBlade?[0,.4,1.0]:null,G:s.G,fg:s.fg,pose:s.pose,k:s.c.k,look:eye,stick:!fromBlade,hand:s.hand,shadeFrom:fromBlade?blade:eye});
   const showPlays=dbLayer!=="cues",showCues=dbLayer!=="plays";
