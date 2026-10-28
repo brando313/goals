@@ -740,12 +740,17 @@ const LESSON={};LESSONS.forEach(l=>LESSON[l.id]=l);
 // numbered positions from the plan: 0 behind the net; rings 10s 5 ft, 20s 10 ft, 30s 15 ft, 40s 20 ft from goal centre; last digit 0..6 left to right, 3 straight on
 function POS(n){if(n===0)return[0,3.6];const ring=Math.floor(n/10),i=n%10,dist=ring*5,ang=(-90+i*30)*Math.PI/180;return[dist*Math.sin(ang),-dist*Math.cos(ang)]}
 // every rep from the Reps tab: [start, decide]. Behind-the-net reps carry a variant (what the goalie does) and the side he comes out
-const REPS={deep:[[43,23],[41,21],[45,25]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,20],[41,21],[45,25]],
+// a rep can name its own best plays (5th slot, spreadsheet wording). Those become green; any other green play in that read drops to orange
+const PLAY_ID={"high glove":"hg","mid glove":"mg","low glove":"lg","high blocker":"hb","mid blocker":"mb","low blocker":"lb","5 hole":"fh","five-hole":"fh","fake shot, wide blocker side":"fake_wb","fake shot, wide glove side":"fake_wg","deke to blocker, go wide glove side":"deke_bg","deke to glove, go wide blocker side":"deke_gb"};
+function playId(n){return PLAY_ID[String(n).trim().toLowerCase()]||n}
+const REPS={deep:[[43,23,null,null,["High Glove"]],[41,21,null,null,["Fake Shot, wide glove side","Deke to blocker, go wide glove side"]],[45,25,null,null,["Fake Shot, wide blocker side","Deke to glove, go wide blocker side"]]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,20],[41,21],[45,25]],
   behind:[[0,16,"post",1],[0,11,"post",-1],[0,23,"deep",1],[0,23,"drop",-1],[0,23,"set",1]]};
 function behindSpot(decide,sx){const S=POS(0);let E=POS(decide);if(decide===16||decide===11)E=[sx*4.8,-2.4];const path=[S,[sx*4.6,2.4],[sx*5.0,-.8],E];return{S,E,path}}
 const RANK={best:0,good:1,less:2},RLABEL={best:"Best read",good:"Good read",less:"Not this time"};
 function label(id){return SHOTNAME[id]||(ROUTE_STYLE[id]&&ROUTE_STYLE[id][1])||id}
-function fullRate(les,c){const r=les.rate(c),o={};SHOTS.forEach(k=>o[k]=r[k]||N("Not this time."));les.routes.forEach(k=>o[k]=r[k]||N("Not this time."));return o}
+function fullRate(les,c){const r=les.rate(c),o={};SHOTS.forEach(k=>o[k]=r[k]||N("Not this time."));les.routes.forEach(k=>o[k]=r[k]||N("Not this time."));
+  if(c&&c.best&&c.best.length){for(const k in o){if(c.best.includes(k)){o[k]=B(o[k][0]==="best"?o[k][1]:"From this spot, this is the best play. "+(o[k][0]==="good"?o[k][1]:""))}else if(o[k][0]==="best")o[k]=G("Good, but from this spot the green play is better.")}}
+  return o}
 function chooseProb(r){return r==="best"?1:r==="good"?.5:.1}
 
 /* ================= goalie behaviour during the approach ================= */
@@ -896,11 +901,12 @@ function startRound(only,seq){if(!only&&!seq)seq=mixedSeq();const p=only?[LESSON
 function weightOf(id){const s=PR.stats[id]||{best:0,good:0,less:0};return Math.max(.4,1+clamp((s.less*1.2+s.good*.4-s.best*.5)/4,-.5,2))}
 function pickLesson(){let ids=ROUND.pool.map(l=>l.id);if(ids.length>1)ids=ids.filter(x=>x!==ROUND.last);const ws=ids.map(weightOf),t=ws.reduce((a,b)=>a+b,0);let r=Math.random()*t,id=ids[ids.length-1];for(let i=0;i<ids.length;i++){r-=ws[i];if(r<=0){id=ids[i];break}}ROUND.last=id;return LESSON[id]}
 function repSpot(les,idx){const list=REPS[les.id],rep=list[idx!=null&&idx<list.length?idx:Math.floor(Math.random()*list.length)];
-  if(les.id==="behind"){const sx=rep[3],v=rep[2];return{...behindSpot(rep[1],sx),sx,v,start:rep[0],decide:rep[1]}}
-  const S=POS(rep[0]),E=POS(rep[1]),sx=E[0]>.6?1:E[0]<-.6?-1:(Math.random()<.5?-1:1);return{S,E,sx,start:rep[0],decide:rep[1]}}
+  const best=rep[4]?rep[4].map(playId):null;
+  if(les.id==="behind"){const sx=rep[3],v=rep[2];return{...behindSpot(rep[1],sx),sx,v,start:rep[0],decide:rep[1],best}}
+  const S=POS(rep[0]),E=POS(rep[1]),sx=E[0]>.6?1:E[0]<-.6?-1:(Math.random()<.5?-1:1);return{S,E,sx,start:rep[0],decide:rep[1],best}}
 function nextRep(){if(ROUND.i>=ROUND.count)return showSummary();ROUND.i++;$("#hudRep").textContent=`${ROUND.i} of ${ROUND.count}`;
   const les=ROUND.seq?LESSON[ROUND.seq[ROUND.i-1]]:pickLesson(),sp=repSpot(les,ROUND.only?ROUND.i-1:null),{S,E,sx}=sp;
-  const ctx={S,E,sx,path:sp.path,v:sp.v,start:sp.start,decide:sp.decide,k:GK[PR.goalieAge]||1,lean:Math.random()<.5?-1:1,slide:Math.random()<.5,les:les.id};
+  const ctx={S,E,sx,path:sp.path,v:sp.v,start:sp.start,decide:sp.decide,best:sp.best,k:GK[PR.goalieAge]||1,lean:Math.random()<.5?-1:1,slide:Math.random()<.5,les:les.id};
   $("#hudRep").textContent=`${ROUND.i} of ${ROUND.count} · ${sp.start} → ${sp.decide}`;
   REP={decisions:[],result:null};startApproach({S,E,ctx,les:les.id,dur:SPEED[PR.speed||"medium"]})}
 function startApproach(ap){ST={mode:"approach",t:0,ap};hideUI();$("#prompt").hidden=false;$("#prompt").textContent="Watch the goalie";startLoop()}
@@ -964,7 +970,7 @@ let dbLayer="plays",dbWhatIf=false;
 function openDebrief(){stopLoop();ST={mode:"debrief"};const d=REP.decisions[REP.decisions.length-1],les=effLes(d.les,d.ctx),fromBehind=d.les==="behind";$("#banner").hidden=true;$("#debrief").hidden=false;dbWhatIf=false;
   $("#dbRep").textContent=`Rep ${ROUND.i} of ${ROUND.count} · ${d.ctx.start} → ${d.ctx.decide}: ${fromBehind?LESSON.behind.title+" — "+les.title.toLowerCase():les.title}`;const res=$("#dbResult");res.textContent=REP.result==="goal"?"Goal!":"Save";res.className="result "+REP.result;
   const v=d.timeout?["less","Too slow this time"]:d.r==="best"?["best","Best read!"]:d.r==="good"?["good","Good read"]:["less","Try this one"];$("#dbVerdict").className="verdict "+v[0];$("#dbVerdict").textContent=v[1];
-  $("#dbKid").textContent=(fromBehind?"You came out from behind the net. ":"")+les.kid;$("#dbRule").textContent=les.rule;$("#dbBest").textContent="Best play: "+les.best;
+  $("#dbKid").textContent=(fromBehind?"You came out from behind the net. ":"")+les.kid;$("#dbRule").textContent=les.rule;$("#dbBest").textContent="Best play: "+(d.ctx.best?d.ctx.best.map(k=>label(k)).join(" or "):les.best);
   const ids=Object.keys(d.rates).sort((a,b)=>RANK[d.rates[a][0]]-RANK[d.rates[b][0]]),tiles=$("#dbTiles"),why=$("#dbWhy");tiles.innerHTML="";
   const pickTile=(id,btn)=>{tiles.querySelectorAll(".ptile").forEach(t=>t.setAttribute("aria-pressed",t===btn));why.textContent=label(id)+": "+d.rates[id][1]};
   ids.forEach(id=>{const r=d.rates[id][0],b=document.createElement("button");b.className="ptile "+r;b.dataset.id=id;b.setAttribute("aria-pressed","false");b.innerHTML=`<i class="dot ${r}"></i><span></span>${id===d.choice?'<em class="you">YOU</em>':""}`;b.querySelector("span").textContent=label(id);b.onclick=()=>{stopVoice();clearLit();pickTile(id,b)};tiles.appendChild(b)});
