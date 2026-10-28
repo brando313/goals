@@ -401,7 +401,7 @@ function build3D(){
 const V3=(a)=>new THREE.Vector3(a[0],a[1],a[2]);
 const POSE={
   stance:{foot0:[1.0,0,0],knee0:[.64,.62,1.22],foot1:[-1.0,0,0],knee1:[-.64,.62,1.22],hip:[0,.05,2.12],lean:.42,glove:[1.4,.9,2.2],gloveTilt:.35,blocker:[-1.1,.95,1.9],blade:[-.05,1.15],rise:.55,headDrop:0,bfly:0},
-  deep:{foot0:[.8,0,0],knee0:[.5,.4,1.38],foot1:[-.8,0,0],knee1:[-.5,.4,1.38],hip:[0,.0,2.35],lean:.3,glove:[1.4,.75,2.4],gloveTilt:.3,blocker:[-1.0,.8,2.1],blade:[-.05,1.05],rise:.55,headDrop:0,bfly:0},
+  deep:{foot0:[.85,0,0],knee0:[.55,.42,1.4],foot1:[-.85,0,0],knee1:[-.55,.42,1.4],hip:[0,.0,2.4],lean:.22,glove:[1.3,.7,2.6],gloveTilt:.3,blocker:[-1.0,.75,2.3],blade:[-.05,1.0],rise:.55,headDrop:0,bfly:0},
   butterfly:{foot0:[2.0,-.2,.06],knee0:[.5,.55,.38],foot1:[-2.0,-.2,.06],knee1:[-.5,.55,.38],hip:[0,.2,1.32],lean:.12,glove:[1.45,.85,1.45],gloveTilt:.2,blocker:[-1.2,.85,1.38],blade:[0,.8],rise:.3,headDrop:0,bfly:1},
   legs:{foot0:[1.2,0,0],knee0:[.95,.42,1.15],foot1:[-1.2,0,0],knee1:[-.95,.42,1.15],hip:[0,.05,1.95],lean:.42,glove:[1.1,.95,2.0],gloveTilt:.35,blocker:[-1.05,.92,1.9],blade:[-1.0,.8],rise:.55,headDrop:0,bfly:0},
   gloveLow:{foot0:[.82,0,0],knee0:[.5,.42,1.22],foot1:[-.82,0,0],knee1:[-.5,.42,1.22],hip:[0,.05,2.05],lean:.42,glove:[1.05,.9,1.2],gloveTilt:.1,blocker:[-1.02,.92,1.95],blade:[-.05,1.1],rise:.55,headDrop:0,bfly:0},
@@ -445,13 +445,14 @@ function blockerTex(){return cTex(128,224,(g,w,h)=>{g.fillStyle="#c41f29";g.fill
 function buildGoalie(envTex){
   const group=new THREE.Group(),M=[],add=(m)=>{m.castShadow=true;m.receiveShadow=true;group.add(m);M.push(m);return m};
   const clothN=clothNormal(),padN=padNormal();
-  const matPad=(mir)=>std({map:padTex(mir),normalMap:padN,normalScale:new THREE.Vector2(.5,.5),roughness:.42,envMap:envTex,envMapIntensity:.35});
+  const matPad=(mir)=>std({map:padTex(mir),normalMap:padN,normalScale:new THREE.Vector2(.5,.5),roughness:.58,envMap:envTex,envMapIntensity:.2});
   const red=std({color:"#c41f29",roughness:.45,envMap:envTex,envMapIntensity:.3}),cream=std({color:"#f4f2ec",roughness:.5}),dark=std({color:"#14171d",roughness:.7,normalMap:clothN,normalScale:new THREE.Vector2(.3,.3)});
-  const jersey=std({map:jerseyTex(),normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9}),sleeve=std({map:cTex(128,256,(c,w,h)=>{c.fillStyle="#f1f2f4";c.fillRect(0,0,w,h);c.fillStyle="#2347a8";c.fillRect(0,h*.55,w,h*.1);c.fillStyle="#c41f29";c.fillRect(0,h*.68,w,h*.05)}),normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9}),blue=std({color:"#2347a8",normalMap:clothN,normalScale:new THREE.Vector2(.5,.5),roughness:.85});
+  const jersey=std({map:jerseyTex(),normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9}),sleeve=std({map:cTex(256,256,(c,w,h)=>{c.fillStyle="#f1f2f4";c.fillRect(0,0,w,h);c.fillStyle="#2347a8";c.fillRect(0,h*.55,w,h*.1);c.fillStyle="#c41f29";c.fillRect(0,h*.68,w,h*.05);c.fillStyle="#2347a8";c.font=`800 ${h*.22}px Arial Narrow, Arial, sans-serif`;c.textAlign="center";c.textBaseline="middle";c.fillText("31",w*.5,h*.3)}),normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9}),blue=std({color:"#2347a8",normalMap:clothN,normalScale:new THREE.Vector2(.5,.5),roughness:.85});
   const gloss=std({color:"#0e0e10",roughness:.16,metalness:.5,envMap:envTex,envMapIntensity:1.1}),wire=std({color:"#f3f3f3",roughness:.25,metalness:.7,envMap:envTex,envMapIntensity:.8}),steel=std({color:"#b9c2cc",roughness:.2,metalness:.85,envMap:envTex});
   const R={group,M};
   // legs: pad (unit length along +z), knee stack, boot, thigh
-  R.legs=[0,1].map(i=>{const pad=add(new THREE.Mesh(rBoxGeo(.9,1,.42,.12),matPad(i===1)));
+  const padGeo=()=>{const g=rBoxGeo(.9,1,.42,.12);const p=g.attributes.position;for(let k=0;k<p.count;k++){const y=p.getY(k);const t=(y+.5);p.setX(k,p.getX(k)*(t>.78?1-.14*(t-.78)/.22:1));p.setZ(k,p.getZ(k)+(t>.78?-.03*(t-.78)/.22:0))}g.computeVertexNormals();return g};
+  R.legs=[0,1].map(i=>{const pad=add(new THREE.Mesh(padGeo(),matPad(i===1)));
     const roll=add(new THREE.Mesh(new THREE.CapsuleGeometry(.11,1,6,16),red)),iroll=add(new THREE.Mesh(new THREE.CapsuleGeometry(.05,1,6,12),cream));
     // knee stack: landing blocks on the inside of the knee, behind the pad face
     const stacks=[0,1,2].map(j=>add(new THREE.Mesh(rBoxGeo(.34,.12,.26,.04),j===1?red:cream)));
@@ -468,7 +469,7 @@ function buildGoalie(envTex){
     const g=new THREE.LatheGeometry(pts,40);g.scale(1,1,.6);R.torso=add(new THREE.Mesh(g,jersey))}
   R.shoulders=[0,1].map(()=>{const s=add(new THREE.Mesh(new THREE.SphereGeometry(.3,28,18),std({color:"#f1f2f4",normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9})));s.scale.set(1,.85,.62);const cap=add(new THREE.Mesh(new THREE.SphereGeometry(.305,28,18,0,Math.PI*2,0,Math.PI*.45),blue));cap.scale.set(1,.85,.62);return{s,cap}});
   R.collar=add(new THREE.Mesh(new THREE.TorusGeometry(.2,.06,10,24),dark));R.neck=add(new THREE.Mesh(new THREE.CylinderGeometry(.17,.19,.4,16),std({color:"#c9a184",roughness:.85})));
-  R.arms=[0,1].map(()=>({up:add(new THREE.Mesh(new THREE.CylinderGeometry(.24,.21,1,18),sleeve)),fore:add(new THREE.Mesh(new THREE.CylinderGeometry(.2,.18,1,18),sleeve)),elbow:add(new THREE.Mesh(new THREE.SphereGeometry(.23,18,12),blue))}));
+  R.arms=[0,1].map(()=>({up:add(new THREE.Mesh(new THREE.CylinderGeometry(.24,.21,1,18),sleeve)),fore:add(new THREE.Mesh(new THREE.CylinderGeometry(.2,.18,1,18),sleeve)),elbow:add(new THREE.Mesh(new THREE.SphereGeometry(.22,18,12),std({color:"#f1f2f4",normalMap:clothN,normalScale:new THREE.Vector2(.3,.3),roughness:.9})))}));
   // head: a goalie mask. One shell wraps the whole head and chin, with an oval face opening cut out of the front.
   // The face sits inside; a cat-eye cage of bent wire covers the opening and follows the shell's curve.
   {const h=new THREE.Group();
@@ -560,6 +561,7 @@ function buildGoalie(envTex){
     const top=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.56,4,10),std({color:"#f4f2ec",roughness:.6}));top.rotation.z=Math.PI/2;top.position.set(0,.55,.2);g.add(top);
     const glove=new THREE.Mesh(rBoxGeo(.3,.42,.22,.1),std({color:"#2347a8",roughness:.65}));glove.position.set(.02,-.1,-.02);g.add(glove);
     const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,.2,16),std({color:"#f4f2ec",roughness:.7}));cuff.position.set(.02,-.45,-.08);g.add(cuff);
+    const wing=new THREE.Mesh(rBoxGeo(.12,.5,.3,.04),std({color:"#f4f2ec",roughness:.6}));wing.position.set(.36,.1,.08);wing.rotation.y=.5;g.add(wing);
     g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.blocker=g}
   // goalie stick
   const stickW=std({color:"#f2f1ec",roughness:.45}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#17181c";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.3,w,h*.3);c.fillStyle="#f2f1ec";c.fillRect(0,h*.28,w,h*.02);c.fillRect(0,h*.6,w,h*.02)}),roughness:.45});
