@@ -394,7 +394,9 @@ const POSE={
   gloveLow:{foot0:[.82,0,0],knee0:[.5,.42,1.22],foot1:[-.82,0,0],knee1:[-.5,.42,1.22],hip:[0,.05,2.05],lean:.42,glove:[1.05,.9,1.2],gloveTilt:.1,blocker:[-1.02,.92,1.95],blade:[-.05,.95],rise:.55,headDrop:0,bfly:0},
   poke:{foot0:[.82,0,0],knee0:[.5,.5,1.15],foot1:[-.82,0,0],knee1:[-.5,.5,1.15],hip:[0,.2,1.95],lean:.6,glove:[1.05,1.1,1.9],gloveTilt:.3,blocker:[-.55,1.9,1.35],blade:[.1,3.1],rise:.55,headDrop:.1,bfly:0}
 };
-function rvhPose(s){return{foot0:s>0?[1.15,-1.35,.1]:[-.85,.05,0],knee0:s>0?[.8,.55,.38]:[-.3,.45,1.1],foot1:s<0?[-1.15,-1.35,.1]:[.85,.05,0],knee1:s<0?[-.8,.55,.38]:[.3,.45,1.1],hip:[s*.3,.2,1.3],lean:.3,glove:[1.1,.7,1.75],gloveTilt:.3,blocker:[-1.0,.7,1.6],blade:[s*.4,.6],rise:.3,headDrop:0,bfly:.6}}
+// standing on the post: upright, pads together, shoulder on the post, stick flat along the post, facing down the goal line
+function postPose(s){return{foot0:[.4,0,0],knee0:[.3,.3,1.3],foot1:[-.4,0,0],knee1:[-.3,.3,1.3],hip:[0,.05,2.15],lean:.3,glove:[.95,.75,1.75],gloveTilt:.3,blocker:[-.85,.7,1.6],blade:[-.6,.55],rise:.55,headDrop:0,bfly:0,tilt:0}}
+function rvhPose(s){return postPose(s)}
 function lerpPose(A,B,t){const o={};for(const k in A){const a=A[k],b=B[k]===undefined?a:B[k];o[k]=Array.isArray(a)?a.map((v,i)=>v+(b[i]-v)*t):a+(b-a)*t}return o}
 function mirrorPose(p){const m=v=>[-v[0],v[1],v[2]];return{...p,foot0:m(p.foot1),knee0:m(p.knee1),foot1:m(p.foot0),knee1:m(p.knee0),hip:m(p.hip),blade:[-p.blade[0],p.blade[1]]}}
 
@@ -449,27 +451,66 @@ function buildGoalie(envTex){
   R.shoulders=[0,1].map(()=>{const s=add(new THREE.Mesh(new THREE.SphereGeometry(.29,28,18),std({color:"#f1f2f4",normalMap:clothN,roughness:.9})));const cap=add(new THREE.Mesh(new THREE.SphereGeometry(.295,28,18,0,Math.PI*2,0,Math.PI*.45),blue));return{s,cap}});
   R.collar=add(new THREE.Mesh(new THREE.TorusGeometry(.2,.06,10,24),dark));R.neck=add(new THREE.Mesh(new THREE.CylinderGeometry(.17,.19,.4,16),std({color:"#c9a184",roughness:.85})));
   R.arms=[0,1].map(()=>({up:add(new THREE.Mesh(new THREE.CylinderGeometry(.21,.19,1,18),sleeve)),fore:add(new THREE.Mesh(new THREE.CylinderGeometry(.19,.17,1,18),sleeve)),elbow:add(new THREE.Mesh(new THREE.SphereGeometry(.22,18,12),blue))}));
-  // head: helmet with an open face, a cage that follows the curve, chin cup and throat guard
-  {const h=new THREE.Group();const cap=new THREE.Mesh(new THREE.SphereGeometry(.37,40,28,0,Math.PI*2,0,Math.PI*.34),gloss);cap.rotation.x=Math.PI/2;h.add(cap);
-    const shell=new THREE.Mesh(new THREE.SphereGeometry(.37,48,32,Math.PI*1.72,Math.PI*1.56,Math.PI*.3,Math.PI*.64),gloss);shell.rotation.x=Math.PI/2;h.add(shell);
-    const face=new THREE.Mesh(new THREE.SphereGeometry(.17,24,18),std({color:"#c9a184",roughness:.85}));face.scale.set(1.05,.85,1.25);face.position.set(0,.08,-.1);h.add(face);
-    [-.08,.08].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.028,8,8),std({color:"#1a1a1a"}));e.position.set(x,.23,-.05);h.add(e)});
-    const brow=new THREE.Mesh(new THREE.BoxGeometry(.3,.05,.04),std({color:"#5a3b2a"}));brow.position.set(0,.22,.0);h.add(brow);
-    for(let i=-2;i<=2;i++){const a=i*.22,b=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.46,6),wire);b.rotation.x=Math.PI/2;b.position.set(Math.sin(a)*.36,Math.cos(a)*.355,-.12);b.rotation.y=-a*.5;h.add(b)}
-    for(const z of [-.32,-.2,-.08,.04]){const r=.37*Math.sqrt(Math.max(.2,1-((z+.02)/.37)**2));const t=new THREE.Mesh(new THREE.TorusGeometry(r,.012,6,36,Math.PI*.5),wire);t.rotation.set(0,0,Math.PI*.25);t.position.set(0,0,z);h.add(t)}
-    const chin=new THREE.Mesh(new THREE.SphereGeometry(.15,16,12),gloss);chin.scale.set(1.5,.9,.6);chin.position.set(0,.22,-.36);h.add(chin);
-    const throat=new THREE.Mesh(new THREE.CylinderGeometry(.26,.3,.02,24,1,false,-.9,1.8),std({color:"#1d2027",roughness:.4,transparent:true,opacity:.9,side:THREE.DoubleSide}));throat.rotation.x=.25;throat.position.set(0,.12,-.48);h.add(throat);
+  // head: a goalie mask. One shell wraps the whole head and chin, with an oval face opening cut out of the front.
+  // The face sits inside; a cat-eye cage of bent wire covers the opening and follows the shell's curve.
+  {const h=new THREE.Group(),shellM=std({color:"#101114",roughness:.2,metalness:.35,envMap:envTex,envMapIntensity:1.0,side:THREE.DoubleSide});
+    const R0=.37;const faceC=new THREE.Vector3(0,.4,-.02);   // where the face opening points (toward +y, slightly down)
+    // shell: a sphere with the front cut out. We keep every vertex whose direction is more than ~55 degrees from the face center
+    const sg=new THREE.SphereGeometry(R0,56,40);sg.scale(1,1.05,1.12);
+    {const p=sg.attributes.position,idx=sg.index.array,keep=[];const fc=faceC.clone().normalize();
+      for(let k=0;k<idx.length;k+=3){const a=idx[k],b=idx[k+1],c=idx[k+2];let inside=0;for(const v of [a,b,c]){const d=new THREE.Vector3(p.getX(v),p.getY(v),p.getZ(v)).normalize();const ang=Math.acos(clamp(d.dot(fc),-1,1));
+        const zz=p.getZ(v);const lim=zz>.05?.95:zz>-.15?1.05:.8;if(ang<lim)inside++}if(inside<3){keep.push(a,b,c)}}
+      sg.setIndex(keep)}
+    const shell=new THREE.Mesh(sg,shellM);h.add(shell);
+    // chin cup under the opening
+    const chin=new THREE.Mesh(new THREE.SphereGeometry(R0*.98,32,16,Math.PI*.15,Math.PI*.7,Math.PI*.55,Math.PI*.3),shellM);chin.scale.set(1,1.05,1.12);h.add(chin);
+    // face inside the opening
+    const skin=std({color:"#d2a98c",roughness:.85});const face=new THREE.Mesh(new THREE.SphereGeometry(R0*.82,32,24),skin);face.scale.set(.9,.9,1.1);face.position.set(0,-.04,-.03);h.add(face);
+    [-.075,.075].forEach(x=>{const w=new THREE.Mesh(new THREE.SphereGeometry(.035,10,10),std({color:"#f4f2ee"}));w.position.set(x,.26,.02);h.add(w);const e=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),std({color:"#2b2b2b"}));e.position.set(x,.292,.02);h.add(e)});
+    const brow=new THREE.Mesh(new THREE.BoxGeometry(.26,.04,.03),std({color:"#4a3222"}));brow.position.set(0,.265,.075);h.add(brow);
+    const mouth=new THREE.Mesh(new THREE.BoxGeometry(.1,.03,.015),std({color:"#8a4b47"}));mouth.position.set(0,.278,-.14);h.add(mouth);
+    // cage: wires bent to sit just outside the shell over the opening
+    const wire=std({color:"#f2f2f2",roughness:.3,metalness:.7,envMap:envTex,envMapIntensity:.8}),Rw=R0*1.04;
+    const onShell=(ax,az)=>{const v=new THREE.Vector3(Math.sin(ax)*Math.cos(az),Math.cos(ax)*Math.cos(az),Math.sin(az));return v.multiply(new THREE.Vector3(Rw,Rw*1.05,Rw*1.12))};
+    const tube=(pts)=>{const curve=new THREE.CatmullRomCurve3(pts);const m=new THREE.Mesh(new THREE.TubeGeometry(curve,24,.012,6,false),wire);h.add(m)};
+    // horizontal bars (constant height, sweep across the opening)
+    for(const az of [.42,.22,.02,-.18,-.38,-.56]){const span=az>.3?.7:az>-.3?1.0:.75;const pts=[];for(let t=-1;t<=1.001;t+=.125)pts.push(onShell(t*span,az));tube(pts)}
+    // vertical bars (sweep top to bottom)
+    for(const ax of [-.75,-.45,-.15,.15,.45,.75]){const pts=[];for(let z=.5;z>=-.62;z-=.1){const lim=z>.3?.7:z>-.3?1.0:.75;if(Math.abs(ax)<=lim+.05)pts.push(onShell(ax,z))}if(pts.length>2)tube(pts)}
+    // cat-eye: a thicker bar across the eye line
+    {const pts=[];for(let t=-1;t<=1.001;t+=.1)pts.push(onShell(t*1.0,.12+.06*Math.cos(t*Math.PI)));const curve=new THREE.CatmullRomCurve3(pts);h.add(new THREE.Mesh(new THREE.TubeGeometry(curve,30,.016,6,false),wire))}
+    // cage frame
+    {const pts=[];for(let a=0;a<=Math.PI*2+.01;a+=Math.PI/24){const ax=Math.cos(a)*.95,az=Math.sin(a)*.6-.07;pts.push(onShell(ax,az))}const curve=new THREE.CatmullRomCurve3(pts,true);h.add(new THREE.Mesh(new THREE.TubeGeometry(curve,64,.02,8,true),std({color:"#1a1a1c",roughness:.4,metalness:.4})))}
+    // throat guard hanging under the chin
+    const throat=new THREE.Mesh(new THREE.CylinderGeometry(.27,.31,.02,24,1,false,-1.0,2.0),std({color:"#1d2027",roughness:.4,transparent:true,opacity:.85,side:THREE.DoubleSide}));throat.rotation.x=.3;throat.position.set(0,.12,-.5);h.add(throat);
     h.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(h);R.head=h}
-  // glove: a mitt with a deep pocket, facing the shooter
-  {const g=new THREE.Group();const sh=new THREE.Shape();sh.moveTo(-.28,-.36);sh.quadraticCurveTo(-.46,-.05,-.4,.24);sh.quadraticCurveTo(-.36,.4,-.22,.42);sh.lineTo(.12,.48);sh.quadraticCurveTo(.44,.48,.44,.14);sh.quadraticCurveTo(.44,-.3,.18,-.42);sh.quadraticCurveTo(-.06,-.48,-.28,-.36);
-    const gg=new THREE.ExtrudeGeometry(sh,{depth:.14,bevelEnabled:true,bevelThickness:.07,bevelSize:.06,bevelSegments:4,curveSegments:16});remapUV(gg);gg.translate(0,0,-.07);
-    const mitt=new THREE.Mesh(gg,std({map:cTex(256,256,(c,w,h)=>{c.fillStyle="#c41f29";c.fillRect(0,0,w,h);c.fillStyle="#f6f4ee";c.fillRect(0,0,w*.18,h);c.fillRect(0,h*.82,w,h*.18);c.beginPath();c.moveTo(w*.3,h*.15);c.lineTo(w*.9,h*.55);c.lineTo(w*.9,h*.66);c.lineTo(w*.3,h*.26);c.closePath();c.fill();for(let i=0;i<400;i++){c.fillStyle=`rgba(0,0,0,${Math.random()*.08})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}}),roughness:.45,envMap:envTex,envMapIntensity:.3}));mitt.scale.setScalar(.72);g.add(mitt);
-    const pocket=new THREE.Mesh(new THREE.SphereGeometry(.24,24,16,0,Math.PI*2,0,Math.PI*.35),std({color:"#7d1016",roughness:.6,side:THREE.DoubleSide}));pocket.rotation.x=-Math.PI/2;pocket.position.set(.02,.03,.1);pocket.scale.set(.72,.72,.3);g.add(pocket);
-    const cuff=new THREE.Mesh(rBoxGeo(.42,.26,.24,.09),cream);cuff.position.set(.03,-.38,-.02);g.add(cuff);g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.glove=g}
-  // blocker
-  {const g=new THREE.Group();const board=new THREE.Mesh(rBoxGeo(.64,.98,.16,.08),std({map:blockerTex(),roughness:.45,envMap:envTex,envMapIntensity:.3}));g.add(board);
-    const side=new THREE.Mesh(new THREE.CapsuleGeometry(.07,.76,4,10),cream);side.position.set(-.34,0,0);g.add(side);
-    const hand=new THREE.Mesh(rBoxGeo(.32,.38,.3,.12),std({color:"#9b1820",roughness:.6}));hand.position.set(0,-.06,-.2);g.add(hand);g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.blocker=g}
+  // catching glove: a big rounded mitt. Thumb side on the inside, a deep pocket of white webbing on the outside, a cuff below
+  {const g=new THREE.Group(),cream=std({color:"#f4f2ec",roughness:.55,envMap:envTex,envMapIntensity:.2}),blueM=std({color:"#2347a8",roughness:.6});
+    const mittTex=cTex(256,256,(c,w,h)=>{c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<900;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
+      c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*.05,h*.3);c.lineTo(w*.3,h*.05);c.lineTo(w*.42,h*.05);c.lineTo(w*.17,h*.3);c.closePath();c.fill();c.strokeStyle="rgba(0,0,0,.15)";c.lineWidth=2;for(let y=.2;y<1;y+=.18){c.beginPath();c.moveTo(w*.05,h*y);c.lineTo(w*.6,h*(y-.12));c.stroke()}});
+    // mitt body: a rounded, slightly cupped slab
+    const sh=new THREE.Shape();sh.moveTo(-.4,-.42);sh.quadraticCurveTo(-.55,-.1,-.46,.28);sh.quadraticCurveTo(-.4,.5,-.12,.52);sh.lineTo(.2,.5);sh.quadraticCurveTo(.5,.46,.5,.1);sh.quadraticCurveTo(.5,-.34,.22,-.46);sh.quadraticCurveTo(-.08,-.54,-.4,-.42);
+    const gg=new THREE.ExtrudeGeometry(sh,{depth:.16,bevelEnabled:true,bevelThickness:.08,bevelSize:.07,bevelSegments:5,curveSegments:18});remapUV(gg);gg.translate(0,0,-.08);
+    const mitt=new THREE.Mesh(gg,std({map:mittTex,roughness:.55,envMap:envTex,envMapIntensity:.2}));mitt.scale.setScalar(.8);g.add(mitt);
+    // pocket: a deep oval dish of webbing set into the outside of the mitt
+    const dish=new THREE.Mesh(new THREE.SphereGeometry(.3,24,16,0,Math.PI*2,0,Math.PI*.42),std({color:"#d9d6cc",roughness:.9,side:THREE.DoubleSide}));dish.rotation.x=-Math.PI/2;dish.position.set(.1,.14,.2);dish.scale.set(.95,1.15,.5);g.add(dish);
+    const webTex=cTex(256,256,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle="#fafaf7";c.lineWidth=5;for(let x=-64;x<w+64;x+=22){c.beginPath();c.moveTo(x,0);c.lineTo(x+64,h);c.stroke();c.beginPath();c.moveTo(x+64,0);c.lineTo(x,h);c.stroke()}});
+    const web=new THREE.Mesh(new THREE.CircleGeometry(.27,32),std({map:webTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:.9}));web.position.set(.1,.14,.21);web.scale.set(.95,1.15,1);g.add(web);
+    // thumb on the inside edge, finger rolls along the top, cuff below
+    const thumb=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.4,6,12),cream);thumb.position.set(-.42,.05,.0);thumb.rotation.z=.15;g.add(thumb);
+    for(let i=0;i<4;i++){const f=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.2,4,10),cream);f.rotation.z=Math.PI/2;f.position.set(-.12+i*.14,.44,-.02);g.add(f)}
+    const cuff=new THREE.Mesh(rBoxGeo(.44,.26,.26,.1),cream);cuff.position.set(.02,-.5,-.02);g.add(cuff);const band=new THREE.Mesh(rBoxGeo(.46,.06,.28,.03),blueM);band.position.set(.02,-.42,-.02);g.add(band);
+    g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.glove=g}
+  // blocker: a flat rectangular board on the back of the hand. White face with a blue stripe panel, padded edge, glove underneath
+  {const g=new THREE.Group();const bTex=cTex(256,384,(c,w,h)=>{c.translate(w,0);c.scale(-1,1);c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<1200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
+    c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*.08,h*.04);c.lineTo(w*.4,h*.04);c.lineTo(w*.22,h*.96);c.lineTo(w*.08,h*.96);c.closePath();c.fill();c.fillStyle="#1a3480";c.fillRect(w*.08,h*.04,w*.05,h*.92);
+    c.strokeStyle="rgba(0,0,0,.18)";c.lineWidth=2;c.strokeRect(w*.05,h*.03,w*.9,h*.94);c.beginPath();c.moveTo(w*.05,h*.5);c.lineTo(w*.95,h*.5);c.stroke()});
+    const board=new THREE.Mesh(rBoxGeo(.62,.92,.1,.05),std({map:bTex,roughness:.5,envMap:envTex,envMapIntensity:.25}));g.add(board);
+    const edge=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.84,4,10),std({color:"#2347a8",roughness:.6}));edge.position.set(-.32,0,-.02);g.add(edge);
+    const top=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.56,4,10),std({color:"#f4f2ec",roughness:.6}));top.rotation.z=Math.PI/2;top.position.set(0,.47,-.02);g.add(top);
+    const glove=new THREE.Mesh(rBoxGeo(.3,.42,.22,.1),std({color:"#2347a8",roughness:.65}));glove.position.set(.02,-.12,-.17);g.add(glove);
+    const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,.2,16),std({color:"#f4f2ec",roughness:.7}));cuff.position.set(.02,-.5,-.14);g.add(cuff);
+    g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.blocker=g}
   // goalie stick
   const stickW=std({color:"#f2f1ec",roughness:.4}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#f2f1ec";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.15,w,h*.55)}),roughness:.4});
   R.sblade=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({map:tapeTex(),roughness:.7})));R.paddle=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickR));R.shaft=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickW));R.knob=add(new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1,12),std({color:"#e9e6df",roughness:.9})));
@@ -671,7 +712,7 @@ function cueAt(les,c,u){
     case "lean":{const a=sm((u-.45)/.35);const from=c.slide?[base[0]-c.lean*1.4,base[1]]:base;const to=[clamp(base[0]+c.lean*1.15,-2.5,2.5),base[1]];const tp={...bob,tilt:.22*a,glove:[bob.glove[0]+.25*a,bob.glove[1],bob.glove[2]],hip:[bob.hip[0]+.12*a,bob.hip[1],bob.hip[2]]};const pose=c.lean>0?tp:mirrorPose({...tp});return{pos:l2(from,to,a),pose}}
     case "out":{const a=sm((u-.3)/.45);const far=stdPos(Pt,7.2);return{pos:l2(base,far,a),pose:lerpPose(bob,POSE.deep,.3)}}
     case "set":return{pos:stdPos(Pt,3.4),pose:bob};
-    case "post":return{pos:[c.sx*2.35,-.8],pose:rvhPose(c.sx)};
+    case "post":return{pos:[c.sx*2.55,-.6],pose:postPose(c.sx)};
   }return{pos:base,pose:bob}}
 function goalieAt(ap,u){const c=ap.ctx,Pt=l2(ap.S,ap.E,eo(u)),cue=cueAt(LESSON[ap.les],c,u),G=cue.pos,fg=n2([Pt[0]-G[0],Pt[1]-G[1]]);return{P:Pt,G,fg,pose:cue.pose}}
 function lookPoint(les,G,fg,k,c){const L=[-fg[1],fg[0]];const at=les.lookAt;const W=(a,d,z)=>[G[0]+L[0]*a+fg[0]*d,G[1]+L[1]*a+fg[1]*d,z*k];
@@ -737,7 +778,7 @@ $("#tLearn").onclick=()=>openLearn();$("#tPlay").onclick=()=>{const nx=LESSONS.f
 const THUMBS={};let thumbQ=[],thumbBusy=false;
 function queueThumb(les,img){const key=les.id+"|"+PR.goalieAge;if(THUMBS[key]){img.src=THUMBS[key];return}thumbQ.push([les,img,key]);if(!thumbBusy)runThumbs()}
 function runThumbs(){const job=thumbQ.shift();if(!job){thumbBusy=false;return}thumbBusy=true;setTimeout(()=>{try{const [les,img,key]=job;if(!THUMBS[key])THUMBS[key]=makeThumb(les);img.src=THUMBS[key]}catch(e){}runThumbs()},16)}
-function lessonCtx(les){const zone=les.zones[0],sx=1,k=GK[PR.goalieAge]||1;const E={slot:[1.5,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8]}[zone],S={slot:[2,-38],wing:[sx*24,-40],sharp:[sx*25,-24]}[zone];
+function lessonCtx(les){const zone=les.zones[0],sx=1,k=GK[PR.goalieAge]||1;const E={slot:[1.5,-14],wing:[sx*11,-11],sharp:[sx*10.3,-3.8]}[zone],S={slot:[2,-38],wing:[sx*24,-40],sharp:[sx*24,-14]}[zone];
   return{S,E,sx,zone,k,lean:1,slide:false,les:les.id}}
 function makeThumb(les){const W=300,H=340,cv=document.createElement("canvas");cv.width=W;cv.height=H;const ctx=cv.getContext("2d");const c=lessonCtx(les),ap={S:c.S,E:c.E,ctx:c,les:les.id},gs=goalieAt(ap,1),G=gs.G,d=n2([gs.P[0]-G[0],gs.P[1]-G[1]]);
   renderView(ctx,W,H,{eye:[G[0]+d[0]*5.6,G[1]+d[1]*5.6,2.7],tgt:[G[0],G[1],1.9*c.k],G,fg:gs.fg,pose:gs.pose,k:c.k,look:gs.P});return cv.toDataURL("image/jpeg",.82)}
