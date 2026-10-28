@@ -474,9 +474,14 @@ function buildGoalie(envTex){
   // The face sits inside; a cat-eye cage of bent wire covers the opening and follows the shell's curve.
   {const h=new THREE.Group();
     // mask paint: white shell, blue crown and chin, red stripes. Sphere UVs: u runs around (0 at +x), v from the top down. The face opening points +y (u near .25)
-    const paint=cTex(1024,512,(c,w,h2)=>{c.fillStyle="#f4f3ef";c.fillRect(0,0,w,h2);c.fillStyle="#2347a8";c.fillRect(0,0,w,h2*.2);
-      c.beginPath();c.moveTo(0,h2*.2);c.lineTo(w,h2*.2);c.lineTo(w,h2*.3);c.quadraticCurveTo(w*.75,h2*.5,w*.5,h2*.3);c.quadraticCurveTo(w*.25,h2*.5,0,h2*.3);c.closePath();c.fill();
-      c.fillStyle="#c41f29";c.fillRect(0,h2*.3,w,h2*.03);c.fillStyle="#2347a8";c.fillRect(0,h2*.72,w,h2*.28);c.fillStyle="#c41f29";c.fillRect(0,h2*.7,w,h2*.025);
+    const paint=cTex(1024,512,(c,w,h2)=>{c.fillStyle="#f4f3ef";c.fillRect(0,0,w,h2);
+      // rim around the face opening (v near 0.2), then a blue crown stripe front to back (u ~ .25 is the top of the head), chin block (u ~ .75) with the G, blue cheek sweeps
+      c.fillStyle="#2347a8";c.fillRect(0,h2*.18,w,h2*.06);c.fillStyle="#c41f29";c.fillRect(0,h2*.24,w,h2*.02);
+      c.fillStyle="#c41f29";c.fillRect(w*.205,h2*.2,w*.09,h2*.8);c.fillStyle="#2347a8";c.fillRect(w*.215,h2*.2,w*.07,h2*.8);
+      c.fillStyle="#2347a8";c.fillRect(w*.64,h2*.2,w*.22,h2*.3);c.fillStyle="#c41f29";c.fillRect(w*.64,h2*.49,w*.22,h2*.02);
+      c.fillStyle="#ffffff";c.font=`800 ${h2*.16}px Arial Narrow, Arial, sans-serif`;c.textAlign="center";c.textBaseline="middle";c.save();c.translate(w*.75,h2*.36);c.scale(-1,1);c.fillText("G",0,0);c.restore();
+      for(const u0 of [.02,.48]){c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*u0,h2*.3);c.quadraticCurveTo(w*(u0+.09),h2*.45,w*(u0+.02),h2*.75);c.lineTo(w*(u0+.06),h2*.75);c.quadraticCurveTo(w*(u0+.14),h2*.45,w*(u0+.05),h2*.3);c.closePath();c.fill();
+        c.fillStyle="#c41f29";c.beginPath();c.moveTo(w*(u0+.06),h2*.3);c.quadraticCurveTo(w*(u0+.15),h2*.45,w*(u0+.07),h2*.75);c.lineTo(w*(u0+.09),h2*.75);c.quadraticCurveTo(w*(u0+.17),h2*.45,w*(u0+.08),h2*.3);c.closePath();c.fill()}
       for(let i=0;i<1500;i++){c.fillStyle=`rgba(0,0,0,${Math.random()*.05})`;c.fillRect(Math.random()*w,Math.random()*h2,2,2)}});
     const shellM=std({map:paint,roughness:.22,metalness:.15,envMap:envTex,envMapIntensity:.9,side:THREE.DoubleSide});
     const R0=.37;h.scale.set(1.2,1.2,1.2);const faceC=new THREE.Vector3(0,.4,-.02);   // where the face opening points (toward +y, slightly down)
