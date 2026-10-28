@@ -505,11 +505,11 @@ function buildGoalie(envTex){
   {const g=new THREE.Group();const bTex=cTex(256,384,(c,w,h)=>{c.translate(w,0);c.scale(-1,1);c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<1200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
     c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*.08,h*.04);c.lineTo(w*.4,h*.04);c.lineTo(w*.22,h*.96);c.lineTo(w*.08,h*.96);c.closePath();c.fill();c.fillStyle="#1a3480";c.fillRect(w*.08,h*.04,w*.05,h*.92);
     c.strokeStyle="rgba(0,0,0,.18)";c.lineWidth=2;c.strokeRect(w*.05,h*.03,w*.9,h*.94);c.beginPath();c.moveTo(w*.05,h*.5);c.lineTo(w*.95,h*.5);c.stroke()});
-    const board=new THREE.Mesh(rBoxGeo(.62,.92,.1,.05),std({map:bTex,roughness:.5,envMap:envTex,envMapIntensity:.25}));g.add(board);
-    const edge=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.84,4,10),std({color:"#2347a8",roughness:.6}));edge.position.set(-.32,0,-.02);g.add(edge);
-    const top=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.56,4,10),std({color:"#f4f2ec",roughness:.6}));top.rotation.z=Math.PI/2;top.position.set(0,.47,-.02);g.add(top);
-    const glove=new THREE.Mesh(rBoxGeo(.3,.42,.22,.1),std({color:"#2347a8",roughness:.65}));glove.position.set(.02,-.12,-.17);g.add(glove);
-    const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,.2,16),std({color:"#f4f2ec",roughness:.7}));cuff.position.set(.02,-.5,-.14);g.add(cuff);
+    const board=new THREE.Mesh(rBoxGeo(.62,.92,.16,.05),std({map:bTex,roughness:.5,envMap:envTex,envMapIntensity:.25}));board.position.set(0,0,.2);g.add(board);
+    const edge=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.84,4,10),std({color:"#2347a8",roughness:.6}));edge.position.set(-.33,0,.2);g.add(edge);
+    const top=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.56,4,10),std({color:"#f4f2ec",roughness:.6}));top.rotation.z=Math.PI/2;top.position.set(0,.47,.2);g.add(top);
+    const glove=new THREE.Mesh(rBoxGeo(.3,.42,.22,.1),std({color:"#2347a8",roughness:.65}));glove.position.set(.02,-.1,-.02);g.add(glove);
+    const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,.2,16),std({color:"#f4f2ec",roughness:.7}));cuff.position.set(.02,-.45,-.08);g.add(cuff);
     g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.blocker=g}
   // goalie stick
   const stickW=std({color:"#f2f1ec",roughness:.4}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#f2f1ec";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.15,w,h*.55)}),roughness:.4});
@@ -555,7 +555,7 @@ function poseGoalie(R,G,fg,pose,look,k,wob){
   const gl=V3(p.glove),bl=V3(p.blocker);gl.z+=bob*.6;bl.z+=bob*.6;
   R.glove.position.copy(gl);R.glove.quaternion.setFromUnitVectors(Zup,new THREE.Vector3(.35,.9,.28).normalize());
   R.blocker.position.copy(bl);R.blocker.quaternion.setFromUnitVectors(Zup,new THREE.Vector3(-.3,.92,.2).normalize());
-  [[0,gl,1],[1,bl,-1]].forEach(([i,hand,s])=>{const a=R.arms[i],sh=shoulder[i],elbow=sh.clone().lerp(hand,.5).add(new THREE.Vector3(s*.28,-.05,-.3));
+  [[0,gl,1],[1,bl,-1]].forEach(([i,hand0,s])=>{const hand=hand0.clone().add(new THREE.Vector3(0,i===1?-.22:-.12,-.05));const a=R.arms[i],sh=shoulder[i],elbow=sh.clone().lerp(hand,.5).add(new THREE.Vector3(s*.28,-.05,-.3));
     segBetween(a.up,sh,elbow,1,1);segBetween(a.fore,elbow,hand,1,1);a.elbow.position.copy(elbow)});
   // stick: blade flat on the ice, paddle up to the blocker
   const heel=new THREE.Vector3(p.blade[0]-.55,p.blade[1],.1),toe=new THREE.Vector3(p.blade[0]+.55,p.blade[1],.1),hand=bl.clone().add(new THREE.Vector3(.05,.12,-.25));
