@@ -264,6 +264,7 @@ p{margin:0;line-height:1.5}
       </div>
     </div>
   </div>
+</div>
 <div id="summary" class="screen" hidden>
   <div class="wrap">
     <div class="eyebrow">Round complete</div>
@@ -532,7 +533,7 @@ function buildGoalie(envTex){
     // cuff block below the heel, angled back toward the arm, with the blue band
     const cuff=new THREE.Mesh(rBoxGeo(.74,.42,.34,.08),cream);cuff.position.set(-.02,-.92,-.14);cuff.rotation.x=.3;g.add(cuff);
     const band=new THREE.Mesh(rBoxGeo(.76,.09,.36,.03),dark);band.position.set(-.02,-.74,-.12);band.rotation.x=.3;g.add(band);
-    g.scale.set(.9,.82,.9);const go=new THREE.Group();go.add(g);g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(go);R.glove=go}
+    g.scale.set(.6,.56,.6);const go=new THREE.Group();go.add(g);g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(go);R.glove=go}
   // blocker: a flat rectangular board on the back of the hand. White face with a blue stripe panel, padded edge, glove underneath
   {const g=new THREE.Group();const bTex=cTex(256,384,(c,w,h)=>{c.translate(w,0);c.scale(-1,1);c.fillStyle="#f4f2ec";c.fillRect(0,0,w,h);for(let i=0;i<1200;i++){c.fillStyle=`rgba(60,60,60,${Math.random()*.07})`;c.fillRect(Math.random()*w,Math.random()*h,2,2)}
     c.fillStyle="#2347a8";c.beginPath();c.moveTo(w*.08,h*.04);c.lineTo(w*.4,h*.04);c.lineTo(w*.22,h*.96);c.lineTo(w*.08,h*.96);c.closePath();c.fill();c.fillStyle="#1a3480";c.fillRect(w*.08,h*.04,w*.05,h*.92);
