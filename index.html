@@ -728,8 +728,8 @@ const LESSON={};LESSONS.forEach(l=>LESSON[l.id]=l);
 // numbered positions from the plan: 0 behind the net; rings 10s 5 ft, 20s 10 ft, 30s 15 ft, 40s 20 ft from goal centre; last digit 0..6 left to right, 3 straight on
 function POS(n){if(n===0)return[0,3.6];const ring=Math.floor(n/10),i=n%10,dist=ring*5,ang=(-90+i*30)*Math.PI/180;return[dist*Math.sin(ang),-dist*Math.cos(ang)]}
 // every rep from the Reps tab: [start, decide]. Behind-the-net reps carry a variant (what the goalie does) and the side he comes out
-const REPS={deep:[[43,23],[41,21],[45,25]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,10],[41,11],[45,15]],
-  behind:[[0,16,"post",1],[0,11,"post",-1],[0,13,"deep",1],[0,13,"drop",-1],[0,13,"set",1]]};
+const REPS={deep:[[43,23],[41,21],[45,25]],drop:[[43,23],[42,21],[44,24]],legs:[[43,23],[42,22],[44,25]],lean:[[43,23],[42,22],[44,24]],out:[[43,23],[42,22],[44,24]],set:[[43,23],[42,22],[44,24]],post:[[40,20],[41,21],[45,25]],
+  behind:[[0,16,"post",1],[0,11,"post",-1],[0,23,"deep",1],[0,23,"drop",-1],[0,23,"set",1]]};
 function behindSpot(decide,sx){const S=POS(0);let E=POS(decide);if(decide===16||decide===11)E=[sx*4.8,-2.4];const path=[S,[sx*4.6,2.4],[sx*5.0,-.8],E];return{S,E,path}}
 const RANK={best:0,good:1,less:2},RLABEL={best:"Best read",good:"Good read",less:"Not this time"};
 function label(id){return SHOTNAME[id]||(ROUTE_STYLE[id]&&ROUTE_STYLE[id][1])||id}
