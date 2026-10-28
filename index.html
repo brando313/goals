@@ -400,11 +400,11 @@ function build3D(){
 /* ---------- goalie rig: joints in the goalie's own frame (x = glove side, y = toward the shooter, z = up), in feet ---------- */
 const V3=(a)=>new THREE.Vector3(a[0],a[1],a[2]);
 const POSE={
-  stance:{foot0:[1.0,0,0],knee0:[.64,.62,1.22],foot1:[-1.0,0,0],knee1:[-.64,.62,1.22],hip:[0,.05,2.12],lean:.42,glove:[1.4,.9,2.2],gloveTilt:.35,blocker:[-1.1,.95,1.9],blade:[-.05,1.0],rise:.55,headDrop:0,bfly:0},
-  deep:{foot0:[.8,0,0],knee0:[.5,.4,1.38],foot1:[-.8,0,0],knee1:[-.5,.4,1.38],hip:[0,.0,2.35],lean:.3,glove:[1.4,.75,2.4],gloveTilt:.3,blocker:[-1.0,.8,2.1],blade:[-.05,.9],rise:.55,headDrop:0,bfly:0},
+  stance:{foot0:[1.0,0,0],knee0:[.64,.62,1.22],foot1:[-1.0,0,0],knee1:[-.64,.62,1.22],hip:[0,.05,2.12],lean:.42,glove:[1.4,.9,2.2],gloveTilt:.35,blocker:[-1.1,.95,1.9],blade:[-.05,1.15],rise:.55,headDrop:0,bfly:0},
+  deep:{foot0:[.8,0,0],knee0:[.5,.4,1.38],foot1:[-.8,0,0],knee1:[-.5,.4,1.38],hip:[0,.0,2.35],lean:.3,glove:[1.4,.75,2.4],gloveTilt:.3,blocker:[-1.0,.8,2.1],blade:[-.05,1.05],rise:.55,headDrop:0,bfly:0},
   butterfly:{foot0:[2.0,-.2,.06],knee0:[.5,.55,.38],foot1:[-2.0,-.2,.06],knee1:[-.5,.55,.38],hip:[0,.2,1.32],lean:.12,glove:[1.45,.85,1.45],gloveTilt:.2,blocker:[-1.2,.85,1.38],blade:[0,.8],rise:.3,headDrop:0,bfly:1},
   legs:{foot0:[1.2,0,0],knee0:[.95,.42,1.15],foot1:[-1.2,0,0],knee1:[-.95,.42,1.15],hip:[0,.05,1.95],lean:.42,glove:[1.1,.95,2.0],gloveTilt:.35,blocker:[-1.05,.92,1.9],blade:[-1.0,.8],rise:.55,headDrop:0,bfly:0},
-  gloveLow:{foot0:[.82,0,0],knee0:[.5,.42,1.22],foot1:[-.82,0,0],knee1:[-.5,.42,1.22],hip:[0,.05,2.05],lean:.42,glove:[1.05,.9,1.2],gloveTilt:.1,blocker:[-1.02,.92,1.95],blade:[-.05,.95],rise:.55,headDrop:0,bfly:0},
+  gloveLow:{foot0:[.82,0,0],knee0:[.5,.42,1.22],foot1:[-.82,0,0],knee1:[-.5,.42,1.22],hip:[0,.05,2.05],lean:.42,glove:[1.05,.9,1.2],gloveTilt:.1,blocker:[-1.02,.92,1.95],blade:[-.05,1.1],rise:.55,headDrop:0,bfly:0},
   poke:{foot0:[.82,0,0],knee0:[.5,.5,1.15],foot1:[-.82,0,0],knee1:[-.5,.5,1.15],hip:[0,.2,1.95],lean:.6,glove:[1.05,1.1,1.9],gloveTilt:.3,blocker:[-.55,1.9,1.35],blade:[.1,3.1],rise:.55,headDrop:.1,bfly:0}
 };
 // standing on the post: upright, pads together, shoulder on the post, stick flat along the post, facing down the goal line
@@ -492,7 +492,7 @@ function buildGoalie(envTex){
     // chin cup under the opening
     const chin=new THREE.Mesh(new THREE.SphereGeometry(R0*.98,32,16,Math.PI*.15,Math.PI*.7,Math.PI*.55,Math.PI*.3),shellM);chin.scale.set(1,1.05,1.12);h.add(chin);
     // face inside the opening
-    const skin=std({color:"#d2a98c",roughness:.85});const face=new THREE.Mesh(new THREE.SphereGeometry(R0*.82,32,24),skin);face.scale.set(.9,.9,1.1);face.position.set(0,-.04,-.03);h.add(face);
+    const skin=std({color:"#b98b72",roughness:.9});const face=new THREE.Mesh(new THREE.SphereGeometry(R0*.82,32,24),skin);face.scale.set(.9,.86,1.1);face.position.set(0,-.07,-.03);h.add(face);
     [-.075,.075].forEach(x=>{const w=new THREE.Mesh(new THREE.SphereGeometry(.035,10,10),std({color:"#f4f2ee"}));w.position.set(x,.26,.02);h.add(w);const e=new THREE.Mesh(new THREE.SphereGeometry(.018,8,8),std({color:"#2b2b2b"}));e.position.set(x,.292,.02);h.add(e)});
     const brow=new THREE.Mesh(new THREE.BoxGeometry(.26,.04,.03),std({color:"#4a3222"}));brow.position.set(0,.265,.075);h.add(brow);
     const mouth=new THREE.Mesh(new THREE.BoxGeometry(.1,.03,.015),std({color:"#8a4b47"}));mouth.position.set(0,.278,-.14);h.add(mouth);
@@ -559,7 +559,7 @@ function buildGoalie(envTex){
     const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,.2,16),std({color:"#f4f2ec",roughness:.7}));cuff.position.set(.02,-.45,-.08);g.add(cuff);
     g.traverse(o=>{if(o.isMesh){o.castShadow=true;M.push(o)}});group.add(g);R.blocker=g}
   // goalie stick
-  const stickW=std({color:"#f2f1ec",roughness:.4}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#f2f1ec";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.15,w,h*.55)}),roughness:.4});
+  const stickW=std({color:"#f2f1ec",roughness:.45}),stickR=std({map:cTex(64,256,(c,w,h)=>{c.fillStyle="#17181c";c.fillRect(0,0,w,h);c.fillStyle="#c41f29";c.fillRect(0,h*.3,w,h*.3);c.fillStyle="#f2f1ec";c.fillRect(0,h*.28,w,h*.02);c.fillRect(0,h*.6,w,h*.02)}),roughness:.45});
   R.sblade=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),std({map:tapeTex(),roughness:.7})));R.paddle=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickR));R.shaft=add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),stickW));R.knob=add(new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1,12),std({color:"#e9e6df",roughness:.9})));
   // soft contact shadow under the goalie
   R.blob=new THREE.Mesh(new THREE.CircleGeometry(1,32),new THREE.MeshBasicMaterial({map:cTex(128,128,(c,w,h)=>{const r=c.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);r.addColorStop(0,"rgba(0,0,0,.55)");r.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=r;c.fillRect(0,0,w,h)}),transparent:true,depthWrite:false}));R.blob.position.z=.012;R.blob.renderOrder=2;group.add(R.blob);
@@ -609,9 +609,10 @@ function poseGoalie(R,G,fg,pose,look,k,wob){
     segBetween(a.up,sh,elbow,1,1);segBetween(a.fore,elbow,hand,1,1);a.elbow.position.copy(elbow)});
   // stick: blade flat on the ice, paddle up to the blocker
   const heel=new THREE.Vector3(p.blade[0]-.55,p.blade[1],.1),toe=new THREE.Vector3(p.blade[0]+.55,p.blade[1],.1),hand=bl.clone().add(new THREE.Vector3(.05,.12,-.25));
-  R.sblade.position.copy(heel).lerp(toe,.5);R.sblade.quaternion.identity();R.sblade.scale.set(1.1,.05,.26);
-  const mid=heel.clone().lerp(hand,.5);const up=p.blade[1]>1.8?hand.clone():heel.clone().add(new THREE.Vector3(.0,.0,1.3)).lerp(hand,.25);
-  segBetween(R.paddle,heel,up,.3,.08);segBetween(R.shaft,up,hand,.1,.08);segBetween(R.knob,hand,hand.clone().add(hand.clone().sub(up).normalize().multiplyScalar(.3)),1,1);
+  R.sblade.position.copy(heel).lerp(toe,.5);R.sblade.quaternion.identity();R.sblade.scale.set(1.15,.06,.3);
+  // the blocker hand grips the top of the paddle; the shaft carries on above it
+  const dir=hand.clone().sub(heel).normalize(),top=hand.clone().addScaledVector(dir,1.4);
+  segBetween(R.paddle,heel,hand.clone().addScaledVector(dir,.15),.32,.09);segBetween(R.shaft,hand.clone().addScaledVector(dir,.15),top,.11,.09);segBetween(R.knob,top,top.clone().addScaledVector(dir,.25),1,1);
   R.blob.scale.set(1.9+p.bfly*1.2,1.4,1);R.blob.position.set(0,.3,.012);
   R.group.updateMatrixWorld(true)}
 
