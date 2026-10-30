@@ -960,7 +960,9 @@ function frameView(){const s=ST;if(!s||!s.ap)return null;const k=s.ap.ctx.k;
     const gx=o.goal?clamp(tg[0]*.25,-2.4,2.4):clamp(pl.T[0]*.75,-2.4,2.4),G=[o.G0[0]+(gx-o.G0[0])*sm(s.t/(o.goal?.7:pl.dEnd*.9)),o.G0[1]];const fg=n2([st.P[0]-G[0],st.P[1]-G[1]]);
     const dropT=o.goal?.45:pl.dEnd-.3,dp=sm((s.t-dropT)/.3);const pose=lerpPose(o.pose0,o.down,dp);
     let puck=null,shot=s.t>pl.dEnd;if(shot){const pt=clamp((s.t-pl.dEnd)/o.d2,0,1),padX=clamp(pl.T[0],-2.4,2.4)*.75+Math.sign(pl.T[0])*1.4,T=o.goal?[pl.T[0],.9,pl.T[2]]:[padX,G[1]-.4,.3];puck=o.goal?l2v(st.pk,T,eo(pt)):(pt<1?l2v(st.pk,T,eo(pt)):(s.t<pl.dEnd+o.d2+.3?T:null))}
-    return{eye:[st.P[0],st.P[1],PR.eye],G,fg,pose,k,look:st.pk,hand:PR.shoots,stick:true,stickOpt:{pk:st.pk,side:st.side,windup:st.windup},stickPuck:!shot,puck,flash:o.goal&&s.t>pl.dEnd+o.d2?Math.max(0,1-(s.t-pl.dEnd-o.d2)*1.5):0}}
+    // camera sits just behind and above the skater's head and looks between the puck and the goalie, so the stick, the puck and the goalie are all in frame during the deke
+    const f=n2([G[0]-st.P[0],G[1]-st.P[1]]),b=sm(s.t/.4),aim=puck||st.pk;const eye1=[st.P[0],st.P[1],PR.eye],eye2=[st.P[0]-f[0]*3.0,st.P[1]-f[1]*3.0,PR.eye+1.2],eye=l2v(eye1,eye2,b);const t1=eyeTgt(eye1),t2=[aim[0]*.5+G[0]*.5,aim[1]*.5+G[1]*.5,aim[2]*.5+1.6*.5],tgt=l2v(t1,t2,b);
+    return{eye,tgt,stickEye:[st.P[0],st.P[1]],G,fg,pose,k,look:st.pk,hand:PR.shoots,stick:true,stickOpt:{pk:st.pk,side:st.side,windup:st.windup},stickPuck:!shot,puck,flash:o.goal&&s.t>pl.dEnd+o.d2?Math.max(0,1-(s.t-pl.dEnd-o.d2)*1.5):0}}
   return null}
 function draw(){if(!ST)return;const v=frameView();if(v)renderView(g,W,H,v);if(ST.mode==="decide"&&ST.plans)ST.plans.forEach(pl=>drawRoute(g,W,H,pl,pl.color))}
 function step(dt){const s=ST;if(!s)return;s.t+=dt;
